@@ -1,117 +1,198 @@
+<!-- Full integrated website: Modern UI + Your Firebase logic merged -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Option A — Neon SignUp / Login + Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Time Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:#000;color:white;}
+.neon-btn{cursor:pointer;transition:.2s;}
+.neon-btn:hover{box-shadow:0 0 10px #0ef,0 0 20px #0ef;}
 
-  <!-- Google Font similar to screenshot heading -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+/* AUTH UI */
+.auth-container{
+ width:850px;height:500px;margin:40px auto;display:flex;border:2px solid #0ef;
+ box-shadow:0 0 25px #0ef;border-radius:12px;overflow:hidden;
+}
+.left{
+ width:50%;background:linear-gradient(135deg,#14e9ff,#006eff);
+ padding:40px;display:flex;flex-direction:column;justify-content:center;
+}
+.left h2{font-size:32px;font-weight:700;}
+.left p{margin-top:10px;opacity:.9;}
+.right{width:50%;background:#021526;padding:40px;display:flex;flex-direction:column;justify-content:center;}
+.right h2{font-size:26px;margin-bottom:20px;}
+.input-box{margin-bottom:20px;}
+.input-box input{
+ width:100%;padding:12px;background:transparent;border:none;border-bottom:2px solid #17d0ff;
+ color:white;outline:none;font-size:15px;
+}
+.button{
+ padding:12px;width:100%;background:linear-gradient(90deg,#00eaff,#00aeff);
+ border:none;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer;
+}
+.button:hover{box-shadow:0 0 15px #00eaff;}
+.bottom-text{text-align:center;margin-top:10px;font-size:14px;}
+.bottom-text a{color:#17d0ff;text-decoration:none;}
 
-  <!-- Chart.js for dashboard chart -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- custom styles -->
-  <link rel="stylesheet" href="styles.css" />
+</style>
 </head>
 <body>
-  <!-- App root -->
-  <div id="root">
 
-    <!-- Landing (login/signup) container -->
-    <section class="container" id="auth-screen">
-      <div class="panel-left">
-        <div class="panel-left-inner">
-          <h2 class="welcome-title">WELCOME BACK</h2>
-          <p class="lead">
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ut provident dolorem, error.
-          </p>
-          <p class="small-hint">Already have an account? Use the form on the right to login.</p>
-        </div>
-      </div>
+<header class="w-full p-4 bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 shadow-lg flex justify-between items-center flex-wrap">
+ <h1 class="text-2xl font-bold">StudyTracker</h1>
+ <div id="header-greeting" class="text-lg"></div>
+ <div id="header-buttons" class="flex gap-2 flex-wrap"></div>
+</header>
 
-      <div class="panel-right">
-        <div class="card">
-          <div class="card-header">
-            <h3 id="card-mode">Sign Up</h3>
-            <div class="mode-switch">
-              <button id="btn-to-signup" class="mode-btn active">Sign Up</button>
-              <button id="btn-to-login" class="mode-btn">Login</button>
-            </div>
-          </div>
+<main id="app-container" class="max-w-3xl mx-auto p-4 mt-6"></main>
 
-          <form id="auth-form" class="form-body">
-            <!-- signup fields (some hidden for login mode) -->
-            <div class="field-row signup-only">
-              <input type="text" id="fullname" placeholder="Username" autocomplete="name" />
-            </div>
+<footer class="text-sm text-slate-400 mt-10 w-full text-center pb-6">
+ © Theekshana Viduranga
+</footer>
 
-            <div class="field-row">
-              <input type="email" id="email" placeholder="Email" autocomplete="email" required />
-            </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, addDoc, collection, getDocs, getDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-            <div class="field-row">
-              <input type="password" id="password" placeholder="Password" autocomplete="new-password" required />
-            </div>
+const firebaseConfig={apiKey:"AIzaSyDYhulc8Qz_xGfIeb1g9A6BGO2wwbrz82M",authDomain:"study-9c374.firebaseapp.com",projectId:"study-9c374",storageBucket:"study-9c374.appspot.com",messagingSenderId:"82946998504",appId:"1:82946998504:web:290cd36a2559846891095d"};
 
-            <div class="field-row actions">
-              <button type="submit" id="submit-btn" class="neon-btn">Sign up</button>
-            </div>
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-            <div id="form-msg" class="form-msg" aria-live="polite"></div>
-          </form>
+const ADMIN_UID="m1rddMA36WbVunFW3B0BzuqOwyI2";
+let currentUser=null;
+const appContainer=document.getElementById("app-container");
+const headerGreeting=document.getElementById("header-greeting");
+const headerButtons=document.getElementById("header-buttons");
 
-        </div> <!-- end card -->
-      </div> <!-- end right panel -->
-    </section>
+function getGreeting(name){const h=new Date().getHours();let g=h<12?"Good Morning":h<17?"Good Afternoon":"Good Evening";return name?`${g} ${name}`:g;}
+function updateGreeting(){const n=currentUser?.displayName;const now=new Date();headerGreeting.textContent=`${getGreeting(n)} | ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+setInterval(updateGreeting,1000);
 
-    <!-- Dashboard (hidden until login) -->
-    <section id="dashboard-screen" class="dashboard-screen hidden">
-      <header class="dash-header">
-        <div class="dash-left">
-          <h1 class="dash-title">Dashboard</h1>
-          <p class="dash-sub">Welcome, <span id="dash-username">User</span></p>
-        </div>
-        <div class="dash-right">
-          <button id="btn-logout" class="btn-outline">Logout</button>
-        </div>
-      </header>
+onAuthStateChanged(auth,u=>{currentUser=u;if(u && u.uid===ADMIN_UID) currentUser.displayName="Admin";renderHeader();if(u) renderHome();else renderLoginUI();});
 
-      <main class="dash-main">
-        <div class="cards">
-          <div class="stat-card">
-            <div class="stat-number" id="stat-hours">0</div>
-            <div class="stat-label">Total Hours</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-days">0</div>
-            <div class="stat-label">Days Logged</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="stat-average">0</div>
-            <div class="stat-label">Avg / Day</div>
-          </div>
-        </div>
+function renderHeader(){headerButtons.innerHTML="";
+ if(currentUser){
+   const logoutBtn=document.createElement("button");logoutBtn.textContent="Logout";logoutBtn.className="px-3 py-1 border border-cyan-400 rounded neon-btn";logoutBtn.onclick=()=>signOut(auth);
+   const profileBtn=document.createElement("button");profileBtn.textContent="Profile";profileBtn.className="px-3 py-1 border border-pink-400 rounded neon-btn";profileBtn.onclick=()=>renderProfile();
+   headerButtons.append(logoutBtn,profileBtn);
+   if(currentUser.uid===ADMIN_UID){const admin=document.createElement("button");admin.textContent="Admin Panel";admin.className="px-3 py-1 border border-green-400 rounded neon-btn";admin.onclick=()=>renderAdmin();headerButtons.append(admin);} }
+ else{
+   const login=document.createElement("button");login.textContent="Login";login.className="px-3 py-1 border border-cyan-400 rounded neon-btn";login.onclick=()=>renderLoginUI();
+   const register=document.createElement("button");register.textContent="Register";register.className="px-3 py-1 border border-pink-400 rounded neon-btn";register.onclick=()=>renderRegisterUI();
+   headerButtons.append(login,register);
+ }
+}
 
-        <section class="chart-box">
-          <h3>Weekly Progress</h3>
-          <canvas id="chart-weekly"></canvas>
-        </section>
+/* -------- AUTH UI (Matches your image) -------- */
+function renderLoginUI(){
+ appContainer.innerHTML=`
+ <div class="auth-container">
+   <div class="left">
+     <h2>WELCOME<br>BACK</h2>
+     <p>Login to continue your study tracking.</p>
+   </div>
+   <div class="right">
+     <h2>Login</h2>
+     <form id="login-form">
+       <div class="input-box"><input type="email" name="email" placeholder="Email" required></div>
+       <div class="input-box"><input type="password" name="password" placeholder="Password" required></div>
+       <button class="button" type="submit">Login</button>
+       <p class="bottom-text">Don’t have an account? <a href="#" id="go-register">Sign Up</a></p>
+       <p class="bottom-text"><a href="#" id="forgot">Forgot Password?</a></p>
+       <div id="login-error" class="text-red-400 mt-2"></div>
+     </form>
+   </div>
+ </div>`;
+ document.getElementById("go-register").onclick=()=>renderRegisterUI();
+ document.getElementById("forgot").onclick=async()=>{const email=prompt("Enter email");if(email) await sendPasswordResetEmail(auth,email).catch(e=>alert(e.message));};
+ document.getElementById("login-form").onsubmit=async e=>{e.preventDefault();const f=e.target;
+   try{await signInWithEmailAndPassword(auth,f.email.value,f.password.value);}catch(err){document.getElementById("login-error").textContent=err.message;}}
+}
 
-        <section class="actions-box">
-          <h3>Quick Log (simulate study entry)</h3>
-          <form id="log-form" class="log-form">
-            <input type="date" id="log-date" required />
-            <input type="number" id="log-hours" min="0" max="24" step="0.5" placeholder="Hours" required />
-            <button type="submit" class="neon-small">Add</button>
-            <div id="log-msg" class="small-msg"></div>
-          </form>
-        </section>
-      </main>
-    </section>
+function renderRegisterUI(){
+ appContainer.innerHTML=`
+ <div class="auth-container">
+   <div class="left">
+     <h2>JOIN<br>US</h2>
+     <p>Create your study tracker account in seconds.</p>
+   </div>
+   <div class="right">
+     <h2>Sign Up</h2>
+     <form id="reg-form">
+       <div class="input-box"><input name="fname" placeholder="First Name" required></div>
+       <div class="input-box"><input name="lname" placeholder="Last Name" required></div>
+       <div class="input-box"><input type="email" name="email" placeholder="Email" required></div>
+       <div class="input-box"><input type="password" name="password" placeholder="Password" required></div>
+       <button class="button" type="submit">Register</button>
+       <p class="bottom-text">Already have an account? <a href="#" id="go-login">Login</a></p>
+       <div id="reg-error" class="text-red-400 mt-2"></div>
+     </form>
+   </div>
+ </div>`;
+ document.getElementById("go-login").onclick=()=>renderLoginUI();
+ document.getElementById("reg-form").onsubmit=async e=>{
+  e.preventDefault();const f=e.target;
+  try{
+   const cred=await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
+   await updateProfile(cred.user,{displayName:f.fname.value+" "+f.lname.value});
+   await setDoc(doc(db,"users",cred.user.uid),{first:f.fname.value,last:f.lname.value,email:f.email.value,created:new Date().toISOString()});
+  }catch(err){document.getElementById("reg-error").textContent=err.message;}}
+}
 
-  </div>
+/* -------- HOME -------- */
+async function renderHome(){appContainer.innerHTML=`
+ <h2 class="text-3xl mb-4">Daily Entry</h2>
+ <form id="daily-form" class="space-y-3 bg-slate-900 p-4 rounded-lg">
+   <input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" class="p-2 bg-slate-700 rounded w-full">
+   <input type="number" name="hours" placeholder="Hours studied" class="p-2 bg-slate-700 rounded w-full">
+   <button class="neon-btn px-4 py-2 border border-cyan-400 rounded w-full">Save</button>
+   <div id="daily-msg" class="text-green-400"></div>
+ </form>
+ <h2 class="text-2xl mt-8">Weekly Chart</h2>
+ <canvas id="weekly"></canvas>
+ <h2 class="text-2xl mt-8">Monthly Chart</h2>
+ <canvas id="monthly"></canvas>`;
+ document.getElementById("daily-form").onsubmit=async e=>{e.preventDefault();const f=e.target;
+  try{
+   await addDoc(collection(db,"studyLogs"),{userId:currentUser.uid,date:f.date.value,hours:Number(f.hours.value)});
+   document.getElementById("daily-msg").textContent="Saved!";
+   renderCharts();
+  }catch(err){document.getElementById("daily-msg").textContent=err.message;}};
+ renderCharts();}
 
-  <script src="app.js" type="module"></script>
+async function renderCharts(){const snap=await getDocs(query(collection(db,"studyLogs"),where("userId","==",currentUser.uid)));const data=snap.docs.map(d=>d.data());
+ const weekly=[],today=new Date();for(let i=6;i>=0;i--){const d=new Date();d.setDate(today.getDate()-i);const ds=d.toISOString().slice(0,10);weekly.push(data.filter(x=>x.date===ds).reduce((a,b)=>a+b.hours,0));}
+ const monthly={};data.forEach(x=>{const m=x.date.slice(0,7);monthly[m]=(monthly[m]||0)+x.hours;});
+ new Chart(document.getElementById("weekly"),{type:"line",data:{labels:[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(today.getDate()-6+i);return d.toISOString().slice(5,10);} ),datasets:[{label:"Hours",data:weekly}]}});
+ new Chart(document.getElementById("monthly"),{type:"bar",data:{labels:Object.keys(monthly),datasets:[{label:"Hours",data:Object.values(monthly)}]}});
+}
+
+/* -------- PROFILE -------- */
+async function renderProfile(){const s=await getDoc(doc(db,"users",currentUser.uid));if(!s.exists()) return;
+ const u=s.data();appContainer.innerHTML=`
+ <div class="bg-slate-900 p-6 rounded">
+   <h2 class="text-2xl mb-3">${currentUser.displayName}</h2>
+   <p>Email: ${u.email}</p>
+ </div>`;}
+
+/* -------- ADMIN -------- */
+async function renderAdmin(){appContainer.innerHTML="<h2 class='text-3xl mb-4'>Admin Panel</h2><div id='users'></div>";
+ const users=document.getElementById("users");const snap=await getDocs(collection(db,"users"));
+ snap.forEach(d=>{const u=d.data();const div=document.createElement("div");div.className="bg-slate-800 p-4 rounded mb-2 flex justify-between";
+ div.innerHTML=`<span>${u.first} ${u.last} - ${u.email}</span><button class='neon-btn border px-3 py-1 rounded border-red-400'>Delete</button>`;
+ div.querySelector("button").onclick=async()=>{await deleteDoc(doc(db,"users",d.id));renderAdmin();};users.append(div);});}
+
+</script>
 </body>
 </html>
