@@ -1,9 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, updatePassword, signOut, updateEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js';
+import { 
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, updateProfile, updatePassword, signOut, updateEmail, sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {/* your config */};
+// ---------------- FIREBASE ----------------
+const firebaseConfig = { /* your config */ };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -12,13 +17,7 @@ const ADMIN_UID = "m1rddMA36WbVunFW3B0BzuqOwyI2";
 let currentUser=null;
 const root=document.getElementById("root");
 
-document.addEventListener("DOMContentLoaded", renderLanding);
-
-onAuthStateChanged(auth,user=>{
-  currentUser=user;
-  if(user) user.uid===ADMIN_UID?renderAdminDashboard():renderDashboard();
-});
-
+// ---------------- HELPER ----------------
 function el(tag,attrs={},children=[]){
   const e=document.createElement(tag);
   for(const k in attrs){
@@ -31,7 +30,15 @@ function el(tag,attrs={},children=[]){
   return e;
 }
 
-/* ---------------- LANDING ---------------- */
+// ---------------- AUTH STATE ----------------
+document.addEventListener("DOMContentLoaded", renderLanding);
+
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user) user.uid===ADMIN_UID?renderAdminDashboard():renderDashboard();
+});
+
+// ---------------- LANDING ----------------
 function renderLanding(){
   root.innerHTML="";
   const frame=el("div",{cls:"app-frame"});
@@ -62,18 +69,30 @@ function renderLanding(){
   document.getElementById("go-sign").onclick=e=>{e.preventDefault(); login.style.display="none"; signup.style.display="block";}
   document.getElementById("go-login").onclick=e=>{e.preventDefault(); login.style.display="block"; signup.style.display="none";}
 
-  login.onsubmit=async e=>{ e.preventDefault(); const f=e.target; try{ await signInWithEmailAndPassword(auth,f.email.value,f.password.value);} catch(err){alert(err.message);} }
+  login.onsubmit=async e=>{
+    e.preventDefault(); const f=e.target;
+    try{ await signInWithEmailAndPassword(auth,f.email.value,f.password.value);}
+    catch(err){alert(err.message);}
+  }
 
-  signup.onsubmit=async e=>{ e.preventDefault(); const f=e.target;
+  signup.onsubmit=async e=>{
+    e.preventDefault(); const f=e.target;
     try{
       const cred=await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
       await updateProfile(cred.user,{displayName:f.firstName.value+" "+f.lastName.value});
-      await setDoc(doc(db,"users",cred.user.uid),{firstName:f.firstName.value,lastName:f.lastName.value,email:f.email.value,createdAt:new Date().toISOString()});
+      await setDoc(doc(db,"users",cred.user.uid),{
+        firstName:f.firstName.value,
+        lastName:f.lastName.value,
+        email:f.email.value,
+        createdAt:new Date().toISOString()
+      });
+      await sendEmailVerification(cred.user);
+      alert("Signup success! Verification email sent.");
     }catch(err){alert(err.message);}
   }
 }
 
-/* ---------------- USER DASHBOARD ---------------- */
+// ---------------- USER DASHBOARD ----------------
 async function renderDashboard(){
   root.innerHTML="";
   const frame=el("div",{cls:"app-frame"});
@@ -89,8 +108,8 @@ async function renderDashboard(){
   const dateInput=el("input",{type:"date",cls:"form-field",id:"study-date"});
   const hoursInput=el("input",{type:"number",cls:"form-field",placeholder:"Hours (0-24)",min:0,max:24,step:0.1});
   const addBtn=el("button",{cls:"neon-btn"},"Add / Update");
-  const weeklyCanvas=el("canvas",{id:"weeklyChart"});
-  const monthlyCanvas=el("canvas",{id:"monthlyChart"});
+  const weeklyCanvas=el("canvas",{id:"weeklyChart",width:400,height:200});
+  const monthlyCanvas=el("canvas",{id:"monthlyChart",width:400,height:200});
   dash.append(dateInput,hoursInput,addBtn,weeklyCanvas,monthlyCanvas);
   frame.append(dash);
   root.append(frame);
@@ -109,18 +128,21 @@ async function renderDashboard(){
   const logsSnap=await getDocs(query(collection(db,"studyLogs"),where("userId","==",currentUser.uid)));
   const logs=logsSnap.docs.map(d=>d.data());
 
+  // Weekly Chart
   const today=new Date();
-  const weekDates=[]; for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
+  const weekDates=[];
+  for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
   const weeklyData=weekDates.map(d=>{ const l=logs.find(l=>l.date===d); return l?l.hours:0; });
   new Chart(weeklyCanvas,{type:"line",data:{labels:weekDates,datasets:[{label:"Hours",data:weeklyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
 
+  // Monthly Chart
   const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const monthlyData=Array(12).fill(0);
   logs.forEach(l=>{ const m=new Date(l.date).getMonth(); monthlyData[m]+=l.hours; });
   new Chart(monthlyCanvas,{type:"line",data:{labels:monthLabels,datasets:[{label:"Hours",data:monthlyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
 }
 
-/* ---------------- PROFILE ---------------- */
+// ---------------- PROFILE ----------------
 async function renderProfile(){
   if(!currentUser) return;
   root.innerHTML="";
@@ -149,73 +171,19 @@ async function renderProfile(){
 
   saveBtn.onclick=async()=>{
     const updated={firstName:firstName.value,lastName:lastName.value};
-    if(pwInput.value) updated.password=pwInput.value;
     try{
       await updateDoc(doc(db,"users",currentUser.uid),updated);
-      if(pwInput.value) await updatePassword(currentUser,pwInput.value);
+      if(pwInput.value){
+        try{ await updatePassword(currentUser,pwInput.value); } catch(err){alert("Password update failed: "+err.message);}
+      }
       if(emailInput.value!==userData.email){
-        await updateEmail(currentUser,emailInput.value);
-        await sendEmailVerification(currentUser);
-        alert("Email changed! Verification sent.");
+        try{
+          await updateEmail(currentUser,emailInput.value);
+          await sendEmailVerification(currentUser);
+          alert("Email changed! Verification sent.");
+        } catch(err){alert("Email update failed: "+err.message);}
       }
       alert("Profile updated!"); renderDashboard();
-    }catch(err){alert(err.message);}
-  }
-}
-
-/* ---------------- ADMIN DASHBOARD ---------------- */
-async function renderAdminDashboard(){
-  root.innerHTML="";
-  const frame=el("div",{cls:"app-frame"});
-  const top=el("div",{cls:"topbar"});
-  const brand=el("div",{cls:"brand"},"Admin Dashboard");
-  const btnLogout=el("button",{cls:"neon-btn"},"Logout");
-  top.append(brand,btnLogout);
-  frame.append(top);
-
-  const dash=el("div",{cls:"dashboard"});
-  frame.append(dash);
-  root.append(frame);
-
-  btnLogout.onclick=async()=>{await signOut(auth);renderLanding();}
-
-  const usersSnap=await getDocs(collection(db,"users"));
-  for(const u of usersSnap.docs){
-    const udata=u.data();
-    const card=el("div",{cls:"card"},[
-      el("div",{},`${udata.firstName} ${udata.lastName} (${udata.email})`),
-      el("button",{cls:"neon-btn"},"Delete"),
-      el("button",{cls:"neon-btn"},"View Charts")
-    ]);
-    dash.append(card);
-
-    card.querySelectorAll("button")[0].onclick=async()=>{
-      if(confirm("Delete this user?")){await deleteDoc(doc(db,"users",u.id));renderAdminDashboard();}
-    }
-
-    card.querySelectorAll("button")[1].onclick=async()=>{
-      root.innerHTML="";
-      const frame2=el("div",{cls:"app-frame"});
-      const backBtn=el("button",{cls:"neon-btn"},"Back");
-      frame2.append(backBtn);
-      const canvasWeekly=el("canvas"); const canvasMonthly=el("canvas");
-      frame2.append(canvasWeekly,canvasMonthly);
-      root.append(frame2);
-
-      backBtn.onclick=()=>renderAdminDashboard();
-
-      const logsSnap=await getDocs(query(collection(db,"studyLogs"),where("userId","==",u.id)));
-      const logs=logsSnap.docs.map(d=>d.data());
-
-      const today=new Date();
-      const weekDates=[]; for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
-      const weeklyData=weekDates.map(d=>{ const l=logs.find(l=>l.date===d); return l?l.hours:0; });
-      new Chart(canvasWeekly,{type:"line",data:{labels:weekDates,datasets:[{label:"Hours",data:weeklyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
-
-      const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      const monthlyData=Array(12).fill(0);
-      logs.forEach(l=>{ const m=new Date(l.date).getMonth(); monthlyData[m]+=l.hours; });
-      new Chart(canvasMonthly,{type:"line",data:{labels:monthLabels,datasets:[{label:"Hours",data:monthlyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
-    }
+    } catch(err){alert(err.message);}
   }
 }
