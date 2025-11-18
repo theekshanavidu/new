@@ -1,198 +1,440 @@
-<!-- Full integrated website: Modern UI + Your Firebase logic merged -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study Time Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Study Tracker Mega Version</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-body{background:#000;color:white;}
-.neon-btn{cursor:pointer;transition:.2s;}
-.neon-btn:hover{box-shadow:0 0 10px #0ef,0 0 20px #0ef;}
 
-/* AUTH UI */
-.auth-container{
- width:850px;height:500px;margin:40px auto;display:flex;border:2px solid #0ef;
- box-shadow:0 0 25px #0ef;border-radius:12px;overflow:hidden;
-}
-.left{
- width:50%;background:linear-gradient(135deg,#14e9ff,#006eff);
- padding:40px;display:flex;flex-direction:column;justify-content:center;
-}
-.left h2{font-size:32px;font-weight:700;}
-.left p{margin-top:10px;opacity:.9;}
-.right{width:50%;background:#021526;padding:40px;display:flex;flex-direction:column;justify-content:center;}
-.right h2{font-size:26px;margin-bottom:20px;}
-.input-box{margin-bottom:20px;}
-.input-box input{
- width:100%;padding:12px;background:transparent;border:none;border-bottom:2px solid #17d0ff;
- color:white;outline:none;font-size:15px;
-}
-.button{
- padding:12px;width:100%;background:linear-gradient(90deg,#00eaff,#00aeff);
- border:none;border-radius:25px;font-size:16px;font-weight:600;cursor:pointer;
-}
-.button:hover{box-shadow:0 0 15px #00eaff;}
-.bottom-text{text-align:center;margin-top:10px;font-size:14px;}
-.bottom-text a{color:#17d0ff;text-decoration:none;}
-
-</style>
-</head>
-<body>
-
-<header class="w-full p-4 bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 shadow-lg flex justify-between items-center flex-wrap">
- <h1 class="text-2xl font-bold">StudyTracker</h1>
- <div id="header-greeting" class="text-lg"></div>
- <div id="header-buttons" class="flex gap-2 flex-wrap"></div>
-</header>
-
-<main id="app-container" class="max-w-3xl mx-auto p-4 mt-6"></main>
-
-<footer class="text-sm text-slate-400 mt-10 w-full text-center pb-6">
- © Theekshana Viduranga
-</footer>
-
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, addDoc, collection, getDocs, getDoc, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile, updateEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, addDoc, collection, getDocs, getDoc, query, where, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyDYhulc8Qz_xGfIeb1g9A6BGO2wwbrz82M",authDomain:"study-9c374.firebaseapp.com",projectId:"study-9c374",storageBucket:"study-9c374.appspot.com",messagingSenderId:"82946998504",appId:"1:82946998504:web:290cd36a2559846891095d"};
+const firebaseConfig = {
+    apiKey: "AIzaSyDYhulc8Qz_xGfIeb1g9A6BGO2wwbrz82M",
+    authDomain: "study-9c374.firebaseapp.com",
+    projectId: "study-9c374",
+    storageBucket: "study-9c374.appspot.com",
+    messagingSenderId: "82946998504",
+    appId: "1:82946998504:web:290cd36a2559846891095d"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_UID = "m1rddMA36WbVunFW3B0BzuqOwyI2";
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+let currentUser = null;
+const appContainer = document.getElementById('app-container');
+const headerGreeting = document.getElementById('header-greeting');
+const headerButtons = document.getElementById('header-buttons');
 
-const ADMIN_UID="m1rddMA36WbVunFW3B0BzuqOwyI2";
-let currentUser=null;
-const appContainer=document.getElementById("app-container");
-const headerGreeting=document.getElementById("header-greeting");
-const headerButtons=document.getElementById("header-buttons");
+// ---------- Greeting ----------
+function getGreeting(name){
+  const h = new Date().getHours();
+  let greeting = h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening";
+  return name ? `${greeting} ${name}` : greeting;
+}
+function updateGreeting(){
+  const name = currentUser?.displayName;
+  const now = new Date();
+  headerGreeting.textContent = `${getGreeting(name)} | ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+}
+setInterval(updateGreeting, 1000);
 
-function getGreeting(name){const h=new Date().getHours();let g=h<12?"Good Morning":h<17?"Good Afternoon":"Good Evening";return name?`${g} ${name}`:g;}
-function updateGreeting(){const n=currentUser?.displayName;const now=new Date();headerGreeting.textContent=`${getGreeting(n)} | ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
-setInterval(updateGreeting,1000);
+// ---------- Auth Listener ----------
+onAuthStateChanged(auth, u=>{
+  currentUser = u;
+  if(currentUser && currentUser.uid===ADMIN_UID) currentUser.displayName="Admin";
+  renderHeader();
+  if(currentUser) renderHome();
+  else renderWelcome();
+});
 
-onAuthStateChanged(auth,u=>{currentUser=u;if(u && u.uid===ADMIN_UID) currentUser.displayName="Admin";renderHeader();if(u) renderHome();else renderLoginUI();});
+// ---------- Header ----------
+function renderHeader(){
+  headerButtons.innerHTML='';
+  if(currentUser){
+    const homeBtn = createLiquidButton("Home",()=>renderHome());
+    const profileBtn = createLiquidButton("Profile",()=>renderProfile());
+    headerButtons.appendChild(homeBtn);
+    headerButtons.appendChild(profileBtn);
 
-function renderHeader(){headerButtons.innerHTML="";
- if(currentUser){
-   const logoutBtn=document.createElement("button");logoutBtn.textContent="Logout";logoutBtn.className="px-3 py-1 border border-cyan-400 rounded neon-btn";logoutBtn.onclick=()=>signOut(auth);
-   const profileBtn=document.createElement("button");profileBtn.textContent="Profile";profileBtn.className="px-3 py-1 border border-pink-400 rounded neon-btn";profileBtn.onclick=()=>renderProfile();
-   headerButtons.append(logoutBtn,profileBtn);
-   if(currentUser.uid===ADMIN_UID){const admin=document.createElement("button");admin.textContent="Admin Panel";admin.className="px-3 py-1 border border-green-400 rounded neon-btn";admin.onclick=()=>renderAdmin();headerButtons.append(admin);} }
- else{
-   const login=document.createElement("button");login.textContent="Login";login.className="px-3 py-1 border border-cyan-400 rounded neon-btn";login.onclick=()=>renderLoginUI();
-   const register=document.createElement("button");register.textContent="Register";register.className="px-3 py-1 border border-pink-400 rounded neon-btn";register.onclick=()=>renderRegisterUI();
-   headerButtons.append(login,register);
- }
+    if(currentUser.uid===ADMIN_UID){
+      const adminBtn = createLiquidButton("Admin Panel",()=>renderAdmin());
+      headerButtons.appendChild(adminBtn);
+    }
+
+    const logoutBtn = createLiquidButton("Logout", async ()=>await signOut(auth));
+    headerButtons.appendChild(logoutBtn);
+
+  }else{
+    const loginBtn = createLiquidButton("Login",()=>renderLogin());
+    const regBtn = createLiquidButton("Register",()=>renderRegister());
+    headerButtons.appendChild(loginBtn);
+    headerButtons.appendChild(regBtn);
+  }
 }
 
-/* -------- AUTH UI (Matches your image) -------- */
-function renderLoginUI(){
- appContainer.innerHTML=`
- <div class="auth-container">
-   <div class="left">
-     <h2>WELCOME<br>BACK</h2>
-     <p>Login to continue your study tracking.</p>
-   </div>
-   <div class="right">
-     <h2>Login</h2>
-     <form id="login-form">
-       <div class="input-box"><input type="email" name="email" placeholder="Email" required></div>
-       <div class="input-box"><input type="password" name="password" placeholder="Password" required></div>
-       <button class="button" type="submit">Login</button>
-       <p class="bottom-text">Don’t have an account? <a href="#" id="go-register">Sign Up</a></p>
-       <p class="bottom-text"><a href="#" id="forgot">Forgot Password?</a></p>
-       <div id="login-error" class="text-red-400 mt-2"></div>
-     </form>
-   </div>
- </div>`;
- document.getElementById("go-register").onclick=()=>renderRegisterUI();
- document.getElementById("forgot").onclick=async()=>{const email=prompt("Enter email");if(email) await sendPasswordResetEmail(auth,email).catch(e=>alert(e.message));};
- document.getElementById("login-form").onsubmit=async e=>{e.preventDefault();const f=e.target;
-   try{await signInWithEmailAndPassword(auth,f.email.value,f.password.value);}catch(err){document.getElementById("login-error").textContent=err.message;}}
+// ---------- Liquid Button Helper ----------
+function createLiquidButton(text, onClick){
+  const btn = document.createElement('button');
+  btn.className = 'liquid-btn';
+  btn.textContent = text;
+  btn.onclick = onClick;
+  return btn;
 }
 
-function renderRegisterUI(){
- appContainer.innerHTML=`
- <div class="auth-container">
-   <div class="left">
-     <h2>JOIN<br>US</h2>
-     <p>Create your study tracker account in seconds.</p>
-   </div>
-   <div class="right">
-     <h2>Sign Up</h2>
-     <form id="reg-form">
-       <div class="input-box"><input name="fname" placeholder="First Name" required></div>
-       <div class="input-box"><input name="lname" placeholder="Last Name" required></div>
-       <div class="input-box"><input type="email" name="email" placeholder="Email" required></div>
-       <div class="input-box"><input type="password" name="password" placeholder="Password" required></div>
-       <button class="button" type="submit">Register</button>
-       <p class="bottom-text">Already have an account? <a href="#" id="go-login">Login</a></p>
-       <div id="reg-error" class="text-red-400 mt-2"></div>
-     </form>
-   </div>
- </div>`;
- document.getElementById("go-login").onclick=()=>renderLoginUI();
- document.getElementById("reg-form").onsubmit=async e=>{
-  e.preventDefault();const f=e.target;
-  try{
-   const cred=await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
-   await updateProfile(cred.user,{displayName:f.fname.value+" "+f.lname.value});
-   await setDoc(doc(db,"users",cred.user.uid),{first:f.fname.value,last:f.lname.value,email:f.email.value,created:new Date().toISOString()});
-  }catch(err){document.getElementById("reg-error").textContent=err.message;}}
+// ---------- Welcome ----------
+function renderWelcome(){
+  appContainer.innerHTML = `
+  <div class="flex flex-col items-center justify-center h-full gap-6">
+    <h2 class="text-3xl font-bold text-white text-center">Welcome to Study Tracker System</h2>
+    <div class="flex gap-6 flex-wrap mt-4">
+      <button id="welcome-login-btn" class="liquid-btn px-6 py-2 text-white">Login</button>
+      <button id="welcome-register-btn" class="liquid-btn px-6 py-2 text-white">Register</button>
+    </div>
+  </div>`;
+
+  document.getElementById('welcome-login-btn').onclick = () => renderLogin();
+  document.getElementById('welcome-register-btn').onclick = () => renderRegister();
 }
 
-/* -------- HOME -------- */
-async function renderHome(){appContainer.innerHTML=`
- <h2 class="text-3xl mb-4">Daily Entry</h2>
- <form id="daily-form" class="space-y-3 bg-slate-900 p-4 rounded-lg">
-   <input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" class="p-2 bg-slate-700 rounded w-full">
-   <input type="number" name="hours" placeholder="Hours studied" class="p-2 bg-slate-700 rounded w-full">
-   <button class="neon-btn px-4 py-2 border border-cyan-400 rounded w-full">Save</button>
-   <div id="daily-msg" class="text-green-400"></div>
- </form>
- <h2 class="text-2xl mt-8">Weekly Chart</h2>
- <canvas id="weekly"></canvas>
- <h2 class="text-2xl mt-8">Monthly Chart</h2>
- <canvas id="monthly"></canvas>`;
- document.getElementById("daily-form").onsubmit=async e=>{e.preventDefault();const f=e.target;
-  try{
-   await addDoc(collection(db,"studyLogs"),{userId:currentUser.uid,date:f.date.value,hours:Number(f.hours.value)});
-   document.getElementById("daily-msg").textContent="Saved!";
-   renderCharts();
-  }catch(err){document.getElementById("daily-msg").textContent=err.message;}};
- renderCharts();}
-
-async function renderCharts(){const snap=await getDocs(query(collection(db,"studyLogs"),where("userId","==",currentUser.uid)));const data=snap.docs.map(d=>d.data());
- const weekly=[],today=new Date();for(let i=6;i>=0;i--){const d=new Date();d.setDate(today.getDate()-i);const ds=d.toISOString().slice(0,10);weekly.push(data.filter(x=>x.date===ds).reduce((a,b)=>a+b.hours,0));}
- const monthly={};data.forEach(x=>{const m=x.date.slice(0,7);monthly[m]=(monthly[m]||0)+x.hours;});
- new Chart(document.getElementById("weekly"),{type:"line",data:{labels:[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(today.getDate()-6+i);return d.toISOString().slice(5,10);} ),datasets:[{label:"Hours",data:weekly}]}});
- new Chart(document.getElementById("monthly"),{type:"bar",data:{labels:Object.keys(monthly),datasets:[{label:"Hours",data:Object.values(monthly)}]}});
+// ---------- Register ----------
+function renderRegister(){
+  appContainer.innerHTML = `
+  <div class="bg-slate-800 p-6 rounded-xl w-full max-w-md mx-auto space-y-3">
+    <h2 class="text-2xl font-bold">Register</h2>
+    <form id="reg-form" class="flex flex-col gap-2">
+      <input type="text" name="firstName" placeholder="First Name" class="input-field" required>
+      <input type="text" name="lastName" placeholder="Last Name" class="input-field" required>
+      <input type="date" name="birthday" class="input-field" required>
+      <input type="text" name="school" placeholder="School" class="input-field" required>
+      <input type="text" name="phone" placeholder="Phone" class="input-field" required>
+      <select name="examYear" class="input-field" required>
+        <option>2026 A/L</option>
+        <option>2027 A/L</option>
+        <option>2028 A/L</option>
+      </select>
+      <input type="email" name="email" placeholder="Email" class="input-field" required>
+      <input type="password" name="password" placeholder="Password" class="input-field" required>
+      <button type="submit" class="liquid-btn w-full">Register</button>
+      <div id="reg-error" class="text-red-400"></div>
+    </form>
+  </div>`;
+  document.getElementById('reg-form').onsubmit = async e=>{
+    e.preventDefault();
+    const f = e.target;
+    try{
+      const cred = await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
+      await updateProfile(cred.user,{displayName: f.firstName.value + ' ' + f.lastName.value});
+      await setDoc(doc(db,'users',cred.user.uid),{
+        firstName:f.firstName.value,
+        lastName:f.lastName.value,
+        birthday:f.birthday.value,
+        school:f.school.value,
+        phone:f.phone.value,
+        examYear:f.examYear.value,
+        email:f.email.value,
+        createdAt:new Date().toISOString()
+      });
+    }catch(err){ document.getElementById('reg-error').textContent = err.message; }
+  };
 }
 
-/* -------- PROFILE -------- */
-async function renderProfile(){const s=await getDoc(doc(db,"users",currentUser.uid));if(!s.exists()) return;
- const u=s.data();appContainer.innerHTML=`
- <div class="bg-slate-900 p-6 rounded">
-   <h2 class="text-2xl mb-3">${currentUser.displayName}</h2>
-   <p>Email: ${u.email}</p>
- </div>`;}
+// ---------- Login ----------
+function renderLogin(){
+  appContainer.innerHTML = `
+  <div class="bg-slate-800 p-6 rounded-xl w-full max-w-md mx-auto space-y-3">
+    <h2 class="text-2xl font-bold">Login</h2>
+    <form id="login-form" class="flex flex-col gap-2">
+      <input type="email" name="email" placeholder="Email" class="input-field" required>
+      <input type="password" name="password" placeholder="Password" class="input-field" required>
+      <div class="flex justify-between items-center mt-2">
+        <button type="submit" class="liquid-btn">Login</button>
+        <button type="button" id="forgot-pass" class="text-sm text-slate-300">Forgot?</button>
+      </div>
+      <div id="login-error" class="text-red-400"></div>
+    </form>
+  </div>`;
+  document.getElementById('login-form').onsubmit = async e=>{
+    e.preventDefault();
+    const f = e.target;
+    try{ await signInWithEmailAndPassword(auth,f.email.value,f.password.value); }
+    catch(err){ document.getElementById('login-error').textContent = err.message; }
+  };
+  document.getElementById('forgot-pass').onclick = async ()=>{
+    const email = prompt('Enter your email to reset password:');
+    if(email){
+      try{ await sendPasswordResetEmail(auth,email); alert('Check your email'); }
+      catch(err){ alert(err.message); }
+    }
+  };
+}
 
-/* -------- ADMIN -------- */
-async function renderAdmin(){appContainer.innerHTML="<h2 class='text-3xl mb-4'>Admin Panel</h2><div id='users'></div>";
- const users=document.getElementById("users");const snap=await getDocs(collection(db,"users"));
- snap.forEach(d=>{const u=d.data();const div=document.createElement("div");div.className="bg-slate-800 p-4 rounded mb-2 flex justify-between";
- div.innerHTML=`<span>${u.first} ${u.last} - ${u.email}</span><button class='neon-btn border px-3 py-1 rounded border-red-400'>Delete</button>`;
- div.querySelector("button").onclick=async()=>{await deleteDoc(doc(db,"users",d.id));renderAdmin();};users.append(div);});}
+// ---------- Home ----------
+async function renderHome(){
+  appContainer.innerHTML = `
+  <div class="space-y-4 w-full max-w-xl mx-auto">
+    <h2 class="text-2xl font-bold">Daily Entry</h2>
 
+    <form id="daily-form" class="space-y-2 flex flex-col gap-2">
+      <input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" class="input-field" required>
+      <input type="number" name="hours" placeholder="Hours studied" min="0" max="24" class="input-field" required>
+      <button class="liquid-btn w-full">Save / Add</button>
+      <div id="daily-msg" class="text-green-400"></div>
+    </form>
+
+    <h3 class="text-xl font-bold mt-4">Update Today's Entry</h3>
+    <form id="update-today-form" class="flex flex-col gap-2">
+      <input type="number" name="updateHours" placeholder="New hours for today" min="0" max="24" class="input-field">
+      <button class="liquid-btn w-full">Update</button>
+      <div id="update-msg" class="text-green-400"></div>
+    </form>
+
+    <h2 class="text-2xl font-bold mt-4">Weekly Chart</h2>
+    <canvas id="weekly-chart" class="bg-slate-800 rounded p-2"></canvas>
+    <h2 class="text-2xl font-bold mt-4">Monthly Chart</h2>
+    <canvas id="monthly-chart" class="bg-slate-800 rounded p-2"></canvas>
+  </div>`;
+
+  document.getElementById('daily-form').onsubmit = async e=>{
+    e.preventDefault();
+    const f = e.target;
+    const today = f.date.value;
+    if(Number(f.hours.value) > 24){ alert("Maximum hours per day is 24"); return; }
+
+    const logsSnap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',currentUser.uid), where('date','==',today)));
+    if(logsSnap.docs.length){
+      const docId = logsSnap.docs[0].id;
+      await updateDoc(doc(db,'studyLogs',docId), {hours: Number(f.hours.value)});
+      document.getElementById('daily-msg').textContent = 'Updated!';
+    } else {
+      await addDoc(collection(db,'studyLogs'), {userId: currentUser.uid, date: today, hours: Number(f.hours.value), createdAt:new Date().toISOString()});
+      document.getElementById('daily-msg').textContent = 'Saved!';
+    }
+    renderCharts();
+  };
+
+  document.getElementById('update-today-form').onsubmit = async e=>{
+    e.preventDefault();
+    const f = e.target;
+    const today = new Date().toISOString().slice(0,10);
+    const newHours = Number(f.updateHours.value);
+    if(newHours > 24){ alert("Maximum hours per day is 24"); return; }
+
+    const logsSnap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',currentUser.uid), where('date','==',today)));
+    if(logsSnap.docs.length){
+      const docId = logsSnap.docs[0].id;
+      await updateDoc(doc(db,'studyLogs',docId), {hours: newHours});
+      document.getElementById('update-msg').textContent = 'Today\'s entry updated!';
+      f.updateHours.value = '';
+    } else {
+      alert("No entry for today. Please add it first.");
+    }
+    renderCharts();
+  };
+
+  renderCharts();
+}
+
+// ---------- Charts ----------
+async function renderCharts(){
+  const snap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',currentUser.uid)));
+  const data = snap.docs.map(d=>d.data());
+  const weekly=[], monthly={};
+  const today=new Date();
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(today.getDate()-i);
+    const ds=d.toISOString().slice(0,10);
+    weekly.push(data.filter(x=>x.date===ds).reduce((a,b)=>a+b.hours,0));
+  }
+  data.forEach(x=>{
+    const month=x.date.slice(0,7);
+    monthly[month]=(monthly[month]||0)+x.hours;
+  });
+
+  const ctxW = document.getElementById('weekly-chart').getContext('2d');
+  new Chart(ctxW,{type:'line',data:{labels:Array.from({length:7},(_,i)=>{const d=new Date(); d.setDate(today.getDate()-6+i); return d.toISOString().slice(5,10);}), datasets:[{label:'Hours',data:weekly,borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.3)', fill:true}]} , options:{responsive:true, plugins:{legend:{labels:{color:'#fff'}}}, scales:{x:{ticks:{color:'#fff'}}, y:{ticks:{color:'#fff'}}}}});
+
+  const ctxM = document.getElementById('monthly-chart').getContext('2d');
+  new Chart(ctxM,{type:'line', data:{labels:Object.keys(monthly), datasets:[{label:'Hours',data:Object.values(monthly),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.3)',fill:true}]} , options:{responsive:true,plugins:{legend:{labels:{color:'#fff'}}}, scales:{x:{ticks:{color:'#fff'}}, y:{ticks:{color:'#fff'}}}}});
+}
+
+// ---------- Profile ----------
+async function renderProfile(){
+  const snap = await getDoc(doc(db,'users',currentUser.uid));
+  if(!snap.exists()){ alert('Profile not found'); return; }
+  const u = snap.data();
+  appContainer.innerHTML = `
+  <div class="bg-slate-800 p-6 rounded-xl max-w-md mx-auto space-y-4">
+    <h2 class="text-2xl font-bold">${u.firstName} ${u.lastName}</h2>
+    <form id="profile-form" class="flex flex-col gap-2">
+      <label>First Name</label>
+      <input type="text" name="firstName" class="input-field" value="${u.firstName}" required>
+      <label>Last Name</label>
+      <input type="text" name="lastName" class="input-field" value="${u.lastName}" required>
+      <label>Birthday</label>
+      <input type="date" name="birthday" class="input-field" value="${u.birthday}" required>
+      <label>School</label>
+      <input type="text" name="school" class="input-field" value="${u.school}" required>
+      <label>Exam Year</label>
+      <select name="examYear" class="input-field" required>
+        <option ${u.examYear==="2026 A/L"?"selected":""}>2026 A/L</option>
+        <option ${u.examYear==="2027 A/L"?"selected":""}>2027 A/L</option>
+        <option ${u.examYear==="2028 A/L"?"selected":""}>2028 A/L</option>
+      </select>
+      <label>Phone</label>
+      <input type="text" name="phone" class="input-field" value="${u.phone}" required>
+      <label>Email</label>
+      <input type="email" name="email" class="input-field" value="${u.email}" required>
+      <button type="submit" class="liquid-btn w-full">Update Profile</button>
+      <div id="profile-msg" class="text-green-400"></div>
+    </form>
+  </div>`;
+  document.getElementById('profile-form').onsubmit = async e=>{
+    e.preventDefault();
+    const f = e.target;
+    const updatedData = {
+      firstName:f.firstName.value,
+      lastName:f.lastName.value,
+      birthday:f.birthday.value,
+      school:f.school.value,
+      examYear:f.examYear.value,
+      phone:f.phone.value
+    };
+    await updateDoc(doc(db,'users',currentUser.uid), updatedData);
+    if(f.email.value !== currentUser.email){
+      try{
+        await updateEmail(currentUser, f.email.value);
+        await sendEmailVerification(currentUser);
+        alert('Email updated. Verification email sent.');
+      }catch(err){ alert(err.message); }
+    }
+    document.getElementById('profile-msg').textContent = 'Profile updated!';
+  };
+}
+
+// ---------- Admin Panel ----------
+async function renderAdmin(){
+  if(!currentUser || currentUser.uid!==ADMIN_UID){ alert("Access Denied"); return; }
+  appContainer.innerHTML = `
+  <h2 class="text-2xl font-bold mb-4">Admin Panel</h2>
+  <div id="admin-users" class="space-y-2"></div>
+  <div id="admin-user-details" class="mt-6"></div>`;
+
+  const usersSnap = await getDocs(collection(db,'users'));
+  const usersContainer = document.getElementById('admin-users');
+  usersContainer.innerHTML = '';
+  usersSnap.docs.forEach(docSnap=>{
+    const u = docSnap.data();
+    const div = document.createElement('div');
+    div.className = 'bg-slate-800 p-3 rounded flex justify-between items-center';
+    div.innerHTML = `
+      <div>
+        <strong>${u.firstName} ${u.lastName}</strong> (${u.email})<br>
+        School: ${u.school || '-'} • Exam: ${u.examYear || '-'}
+      </div>
+      <div class="flex gap-2">
+        <button class="liquid-btn text-white" onclick="renderAdminUserDetails('${docSnap.id}')">View</button>
+        <button class="liquid-btn text-white" onclick="deleteAdminUser('${docSnap.id}', '${u.firstName} ${u.lastName}')">Delete</button>
+      </div>`;
+    usersContainer.appendChild(div);
+  });
+}
+
+async function deleteAdminUser(uid,name){
+  if(confirm(`Delete user ${name}?`)){
+    await deleteDoc(doc(db,'users',uid));
+    renderAdmin();
+  }
+}
+
+// ---------- Admin User Details + Charts ----------
+let adminWeeklyChart, adminMonthlyChart; // global variables
+
+async function renderAdminUserDetails(uid){
+  const detailsContainer = document.getElementById('admin-user-details');
+  const userSnap = await getDoc(doc(db,'users',uid));
+  if(!userSnap.exists()){ detailsContainer.innerHTML='User not found'; return; }
+  const u = userSnap.data();
+  const logsSnap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',uid)));
+  const logs = logsSnap.docs.map(d=>d.data());
+
+  const weeklyData=[], today=new Date();
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(today.getDate()-i);
+    const ds=d.toISOString().slice(0,10);
+    weeklyData.push(logs.filter(x=>x.date===ds).reduce((a,b)=>a+b.hours,0));
+  }
+  const monthly={};
+  logs.forEach(x=>{
+    const month=x.date.slice(0,7);
+    monthly[month]=(monthly[month]||0)+x.hours;
+  });
+
+  detailsContainer.innerHTML = `
+  <div class="bg-slate-800 p-4 rounded space-y-3 max-w-xl">
+    <h3 class="text-xl font-bold">${u.firstName} ${u.lastName}</h3>
+    <p>Email: ${u.email}</p>
+    <p>Birthday: ${u.birthday}</p>
+    <p>School: ${u.school}</p>
+    <p>Exam: ${u.examYear}</p>
+    <p>Phone: ${u.phone}</p>
+
+    <h4 class="mt-4 font-semibold">Weekly Study Hours</h4>
+    <canvas id="admin-weekly-chart" class="bg-slate-700 rounded p-2"></canvas>
+
+    <h4 class="mt-4 font-semibold">Monthly Study Hours</h4>
+    <canvas id="admin-monthly-chart" class="bg-slate-700 rounded p-2"></canvas>
+  </div>`;
+
+  if(adminWeeklyChart) adminWeeklyChart.destroy();
+  if(adminMonthlyChart) adminMonthlyChart.destroy();
+
+  const ctxW = document.getElementById('admin-weekly-chart').getContext('2d');
+  adminWeeklyChart = new Chart(ctxW,{
+    type:'line',
+    data:{
+      labels:Array.from({length:7},(_,i)=>{const d=new Date(); d.setDate(today.getDate()-6+i); return d.toISOString().slice(5,10);}),
+      datasets:[{label:'Hours',data:weeklyData,borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.3)',fill:true}]
+    },
+    options:{responsive:true, plugins:{legend:{labels:{color:'#fff'}}}, scales:{x:{ticks:{color:'#fff'}}, y:{ticks:{color:'#fff'}}}}
+  });
+
+  const ctxM = document.getElementById('admin-monthly-chart').getContext('2d');
+  adminMonthlyChart = new Chart(ctxM,{
+    type:'line',
+    data:{labels:Object.keys(monthly), datasets:[{label:'Hours',data:Object.values(monthly),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.3)',fill:true}]},
+    options:{responsive:true, plugins:{legend:{labels:{color:'#fff'}}}, scales:{x:{ticks:{color:'#fff'}}, y:{ticks:{color:'#fff'}}}}
+  });
+}
 </script>
+
+<style>
+body{background:black;color:white;min-height:100vh;}
+.input-field{padding:0.5rem;border-radius:0.5rem;background:#1e293b;border:none;color:white;width:100%;}
+.liquid-btn{position:relative;padding:0.5rem 1.5rem;color:white;overflow:hidden;border:none;border-radius:1rem;background:#0ea5e9;cursor:pointer;font-weight:bold;margin:0.2rem;transition:0.3s;}
+.liquid-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:rgba(255,255,255,0.2);transform:skewX(-20deg);transition:0.5s;}
+.liquid-btn:hover::before{left:100%;}
+.liquid-btn:hover{box-shadow:0 0 20px #0ea5e9;}
+</style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 min-h-screen">
+
+<header class="w-full p-4 bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 shadow-lg flex justify-between items-center flex-wrap">
+  <h1 class="text-2xl font-bold">StudyTracker</h1>
+  <div id="header-greeting" class="text-lg"></div>
+  <div id="header-buttons" class="flex gap-2 flex-wrap"></div>
+</header>
+
+<main class="flex-1 w-full max-w-xl mt-4" id="app-container"></main>
+
+<footer class="text-sm text-slate-400 mt-4 w-full text-center">
+  © Theekshana Viduranga | Contact: 0714667630
+</footer>
+
 </body>
 </html>
