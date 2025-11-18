@@ -1,9 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, updatePassword, signOut, updateEmail, sendEmailVerification
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, 
+  updateProfile, updatePassword, signOut, updateEmail, sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
-  getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc
+  getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import Chart from 'https://cdn.jsdelivr.net/npm/chart.js';
 
@@ -97,13 +98,11 @@ async function renderDashboard(){
   frame.append(top);
 
   const dashboard = el("div",{cls:"dashboard"});
-  // daily hours input
   const dateInput = el("input",{type:"date",cls:"form-field",id:"study-date"});
   const hoursInput = el("input",{type:"number",cls:"form-field",placeholder:"Hours (0-24)",min:0,max:24,step:0.1});
   const addBtn = el("button",{cls:"neon-btn"},"Add / Update");
   dashboard.append(dateInput,hoursInput,addBtn);
 
-  // charts
   const weeklyCanvas = el("canvas",{id:"weeklyChart"});
   const monthlyCanvas = el("canvas",{id:"monthlyChart"});
   dashboard.append(weeklyCanvas, monthlyCanvas);
@@ -124,18 +123,15 @@ async function renderDashboard(){
     renderDashboard();
   }
 
-  // render charts
   const logsSnap = await getDocs(query(collection(db,"studyLogs"),where("userId","==",currentUser.uid)));
   const logs = logsSnap.docs.map(d=>d.data());
 
-  // weekly chart last 7 days
   const today = new Date();
   const weekDates = [];
   for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
   const weeklyData = weekDates.map(d=>{ const l = logs.find(l=>l.date===d); return l?l.hours:0; });
   new Chart(weeklyCanvas,{type:"line",data:{labels:weekDates,datasets:[{label:"Hours",data:weeklyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
 
-  // monthly chart
   const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const monthlyData=Array(12).fill(0);
   logs.forEach(l=>{ const m=new Date(l.date).getMonth(); monthlyData[m]+=l.hours; });
@@ -208,14 +204,43 @@ async function renderAdminDashboard(){
     const udata = u.data();
     const card = el("div",{cls:"card"},[
       el("div",{},`${udata.firstName} ${udata.lastName} (${udata.email})`),
-      el("button",{cls:"neon-btn"}, "Delete")
+      el("button",{cls:"neon-btn"},"Delete"),
+      el("button",{cls:"neon-btn"},"View Charts")
     ]);
     dash.append(card);
-    card.querySelector("button").onclick=async()=>{
+
+    card.querySelectorAll("button")[0].onclick=async()=>{
       if(confirm("Delete this user?")){
         await deleteDoc(doc(db,"users",u.id));
         renderAdminDashboard();
       }
+    }
+
+    card.querySelectorAll("button")[1].onclick=async()=>{
+      root.innerHTML="";
+      const frame2 = el("div",{cls:"app-frame"});
+      const backBtn = el("button",{cls:"neon-btn"},"Back");
+      frame2.append(backBtn);
+      const canvasWeekly = el("canvas");
+      const canvasMonthly = el("canvas");
+      frame2.append(canvasWeekly,canvasMonthly);
+      root.append(frame2);
+
+      backBtn.onclick=()=>renderAdminDashboard();
+
+      const logsSnap = await getDocs(query(collection(db,"studyLogs"),where("userId","==",u.id)));
+      const logs = logsSnap.docs.map(d=>d.data());
+
+      const today = new Date();
+      const weekDates = [];
+      for(let i=6;i>=0;i--){ const d=new Date(today); d.setDate(today.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
+      const weeklyData = weekDates.map(d=>{ const l = logs.find(l=>l.date===d); return l?l.hours:0; });
+      new Chart(canvasWeekly,{type:"line",data:{labels:weekDates,datasets:[{label:"Hours",data:weeklyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
+
+      const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const monthlyData=Array(12).fill(0);
+      logs.forEach(l=>{ const m=new Date(l.date).getMonth(); monthlyData[m]+=l.hours; });
+      new Chart(canvasMonthly,{type:"line",data:{labels:monthLabels,datasets:[{label:"Hours",data:monthlyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]} });
     }
   }
 }
