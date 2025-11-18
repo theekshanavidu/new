@@ -1,299 +1,340 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged,
-  updateProfile, updatePassword, signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { 
-  getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, updateDoc, deleteDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ---------------- FIREBASE CONFIG ----------------
+// ---------------- FIREBASE ----------------
 const firebaseConfig = {
-    apiKey: "AIzaSyDYhulc8Qz_xGfIeb1g9A6BGO2wwbrz82M",
-    authDomain: "study-9c374.firebaseapp.com",
-    projectId: "study-9c374",
-    storageBucket: "study-9c374.appspot.com",
-    messagingSenderId: "82946998504",
-    appId: "1:82946998504:web:290cd36a2559846891095d"
+  apiKey: "AIzaSyDYhulc8Qz_xGfIeb1g9A6BGO2wwbrz82M",
+  authDomain: "study-9c374.firebaseapp.com",
+  projectId: "study-9c374",
+  storageBucket: "study-9c374.appspot.com",
+  messagingSenderId: "82946998504",
+  appId: "1:82946998504:web:290cd36a2559846891095d"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---------------- CONSTANTS ----------------
-const ADMIN_UID = "m1rddMA36WbVunFW3B0BzuqOwyI2"; // change accordingly
-let currentUser = null;
-const root = document.getElementById("root");
+const ADMIN_UID = "m1rddMA36WbVunFW3B0BzuqOwyI2"; // set your admin UID
 
-// ---------------- DARK/LIGHT MODE ----------------
-const modeBtn = document.getElementById("toggle-mode");
-let mode = localStorage.getItem("mode") || "dark";
-document.body.classList.add(mode);
-modeBtn.onclick = ()=>{
-    mode = mode==="dark"?"light":"dark";
-    document.body.classList.toggle("dark");
-    document.body.classList.toggle("light");
-    localStorage.setItem("mode",mode);
-};
+let currentUser = null;
 
 // ---------------- HELPER ----------------
-function el(tag,attrs={},children=[]){
-    const e = document.createElement(tag);
-    for(const k in attrs){
-        if(k==="cls") e.className=attrs[k];
-        else if(k==="html") e.innerHTML=attrs[k];
-        else e.setAttribute(k,attrs[k]);
-    }
-    if(typeof children==="string") e.textContent=children;
-    else children.forEach(c=>e.appendChild(typeof c==="string"?document.createTextNode(c):c));
-    return e;
+function el(tag, attrs={}, children=[]){
+  const e=document.createElement(tag);
+  for(const k in attrs){
+      if(k==="cls") e.className=attrs[k];
+      else if(k==="html") e.innerHTML=attrs[k];
+      else e.setAttribute(k, attrs[k]);
+  }
+  if(typeof children==="string") e.textContent=children;
+  else children.forEach(c => e.appendChild(typeof c==="string"?document.createTextNode(c):c));
+  return e;
 }
 
-// ---------------- AUTH LISTENER ----------------
+const root = document.getElementById("root");
+
+// ---------------- AUTH ----------------
 document.addEventListener("DOMContentLoaded", renderLanding);
-onAuthStateChanged(auth,u=>{
-    currentUser=u;
-    if(u){
-        if(u.uid===ADMIN_UID) renderAdminDashboard();
-        else renderDashboard();
+onAuthStateChanged(auth,user=>{
+  currentUser=user;
+  if(user){
+    if(user.uid===ADMIN_UID){
+      renderAdminDashboard();
+    }else{
+      renderDashboard();
     }
+  }
 });
 
-// ---------------- LANDING PAGE ----------------
+// ---------------- LANDING ----------------
 function renderLanding(){
-    if(!root) return;
-    root.innerHTML="";
-    const frame=el("div",{cls:"app-frame"});
-    const top=el("div",{cls:"topbar"},[el("div",{cls:"brand"},"StudyTracker")]);
-    frame.appendChild(top);
+  if(!root) return;
+  root.innerHTML="";
 
-    const panel=el("div",{cls:"split-container panel"});
-    const left=el("div",{cls:"left"},[
-        el("h2",{},["WELCOME BACK!"]),
-        el("p",{},["Login or sign up to continue."])
-    ]);
+  const frame = el("div",{cls:"app-frame"});
+  const top = el("div",{cls:"topbar"},[ el("div",{cls:"brand"},"StudyTracker") ]);
+  frame.appendChild(top);
 
-    const right=el("div",{cls:"right"});
+  const panel = el("div",{cls:"split-container panel"});
+  const left = el("div",{cls:"left"},[
+    el("h2",{},["WELCOME BACK!"]),
+    el("p",{},["Login or sign up to continue."])
+  ]);
+  const right = el("div",{cls:"right"});
 
-    // LOGIN FORM
-    const login=el("form",{id:"login-form"});
-    login.append(
-        el("div",{cls:"form-field"},[el("label",{},["Email"]), el("input",{name:"email",type:"email",required:true})]),
-        el("div",{cls:"form-field"},[el("label",{},["Password"]), el("input",{name:"password",type:"password",required:true})]),
-        el("button",{cls:"neon-btn",type:"submit"},"Login"),
-        el("div",{cls:"small-link",html:`No account? <a href="#" id="go-sign">Sign up</a>`})
-    );
+  const login = el("form",{id:"login-form"});
+  login.append(
+    el("div",{cls:"form-field"},[el("label",{},["Email"]), el("input",{name:"email",type:"email",required:true})]),
+    el("div",{cls:"form-field"},[el("label",{},["Password"]), el("input",{name:"password",type:"password",required:true})]),
+    el("button",{cls:"neon-btn",type:"submit"},"Login"),
+    el("div",{cls:"small-link",html:`No account? <a href="#" id="go-sign">Sign up</a>`})
+  );
 
-    // SIGNUP FORM
-    const signup=el("form",{id:"signup-form",style:"display:none"});
-    signup.append(
-        el("div",{cls:"form-field"},[el("label",{},["First Name"]), el("input",{name:"firstName",required:true})]),
-        el("div",{cls:"form-field"},[el("label",{},["Last Name"]), el("input",{name:"lastName",required:true})]),
-        el("div",{cls:"form-field"},[el("label",{},["Email"]), el("input",{name:"email",type:"email",required:true})]),
-        el("div",{cls:"form-field"},[el("label",{},["Password"]), el("input",{name:"password",type:"password",required:true})]),
-        el("button",{cls:"neon-btn",type:"submit"},"Sign Up"),
-        el("div",{cls:"small-link",html:`Have an account? <a href="#" id="go-login">Login</a>`})
-    );
+  const signup = el("form",{id:"signup-form",style:"display:none"});
+  signup.append(
+    el("div",{cls:"form-field"},[ el("label",{},["First Name"]), el("input",{name:"firstName",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Last Name"]), el("input",{name:"lastName",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Birthday"]), el("input",{name:"birthday",type:"date",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["School"]), el("input",{name:"school",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Phone"]), el("input",{name:"phone",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Exam Year"]), el("input",{name:"examYear",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Email"]), el("input",{name:"email",type:"email",required:true}) ]),
+    el("div",{cls:"form-field"},[ el("label",{},["Password"]), el("input",{name:"password",type:"password",required:true}) ]),
+    el("button",{cls:"neon-btn",type:"submit"},"Sign Up"),
+    el("div",{cls:"small-link",html:`Have an account? <a href="#" id="go-login">Login</a>`})
+  );
 
-    right.append(login,signup);
-    panel.append(left,right);
-    frame.append(panel);
-    root.append(frame);
+  right.append(login,signup);
+  panel.append(left,right);
+  frame.append(panel);
+  root.append(frame);
 
-    document.getElementById("go-sign").onclick=e=>{e.preventDefault(); signup.style.display="block"; login.style.display="none";}
-    document.getElementById("go-login").onclick=e=>{e.preventDefault(); signup.style.display="none"; login.style.display="block";}
+  document.getElementById("go-sign").onclick=e=>{e.preventDefault(); signup.style.display="block"; login.style.display="none";}
+  document.getElementById("go-login").onclick=e=>{e.preventDefault(); signup.style.display="none"; login.style.display="block";}
 
-    login.onsubmit=async e=>{
-        e.preventDefault();
-        try{
-            const f=e.target;
-            await signInWithEmailAndPassword(auth,f.email.value,f.password.value);
-        }catch(err){ alert(err.message);}
-    };
+  login.onsubmit=async e=>{
+    e.preventDefault();
+    try{ await signInWithEmailAndPassword(auth,e.target.email.value,e.target.password.value); }
+    catch(err){ alert(err.message);}
+  };
 
-    signup.onsubmit=async e=>{
-        e.preventDefault();
-        try{
-            const f=e.target;
-            const cred = await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
-            await updateProfile(cred.user,{displayName:f.firstName.value+" "+f.lastName.value});
-            await setDoc(doc(db,"users",cred.user.uid),{
-                firstName:f.firstName.value,
-                lastName:f.lastName.value,
-                email:f.email.value,
-                createdAt:new Date().toISOString()
-            });
-        }catch(err){ alert(err.message);}
-    };
+  signup.onsubmit=async e=>{
+    e.preventDefault();
+    const f=e.target;
+    try{
+      const cred = await createUserWithEmailAndPassword(auth,f.email.value,f.password.value);
+      await updateProfile(cred.user,{displayName:f.firstName.value+" "+f.lastName.value});
+      await setDoc(doc(db,"users",cred.user.uid),{
+        firstName:f.firstName.value,lastName:f.lastName.value,
+        birthday:f.birthday.value,school:f.school.value,
+        phone:f.phone.value,examYear:f.examYear.value,
+        email:f.email.value,createdAt:new Date().toISOString()
+      });
+    }catch(err){alert(err.message);}
+  };
 }
 
-// ---------------- DASHBOARD ----------------
-function renderDashboard(){
-    if(!root) return;
-    root.innerHTML="";
+// ---------------- USER DASHBOARD ----------------
+async function renderDashboard(){
+  root.innerHTML="";
+  const frame=el("div",{cls:"app-frame"});
+  const top=el("div",{cls:"topbar"});
+  const brand=el("div",{cls:"brand"},"StudyTracker");
+  const btnProfile=el("button",{cls:"neon-btn"},"Profile");
+  const btnLogout=el("button",{cls:"neon-btn"},"Logout");
+  top.append(brand,btnProfile,btnLogout);
+  frame.append(top);
 
-    const frame=el("div",{cls:"app-frame"});
-    const top=el("div",{cls:"topbar"},[
-        el("div",{cls:"brand"},"StudyTracker"),
-        el("div",{cls:"flex gap-2"},[
-            el("button",{cls:"neon-btn",onclick:()=>renderProfile()},"Profile"),
-            el("button",{cls:"neon-btn",onclick:async()=>{await signOut(auth); renderLanding();}},"Logout"),
-            el("div",{id:"realtime-time"})
-        ])
-    ]);
-    frame.appendChild(top);
+  const dashboard=el("div",{cls:"dashboard"});
+  const dateTime=el("div",{cls:"card"});
+  dashboard.append(dateTime);
+  function updateTime(){ dateTime.textContent=new Date().toLocaleString(); }
+  setInterval(updateTime,1000); updateTime();
 
-    const dash=el("div",{cls:"dashboard"});
-    frame.appendChild(dash);
-    root.append(frame);
+  const studyForm=el("div",{cls:"card"});
+  const inputDate=el("input",{type:"date",id:"study-date"});
+  const inputHours=el("input",{type:"number",id:"study-hours",min:0,max:24,placeholder:"Hours"});
+  const btnAdd=el("button",{cls:"neon-btn"},"Add/Update");
+  studyForm.append(el("label",{},["Select Date:"]),inputDate,el("label",{},["Hours:"]),inputHours,btnAdd);
+  dashboard.append(studyForm);
 
-    // Realtime date & time
-    const timeDiv=document.getElementById("realtime-time");
-    function updateTime(){ const now=new Date(); timeDiv.textContent=now.toLocaleString();}
-    updateTime();
-    setInterval(updateTime,1000);
+  const chartWeekly=el("canvas",{id:"weeklyChart",cls:"mt-4"});
+  const chartMonthly=el("canvas",{id:"monthlyChart",cls:"mt-4"});
+  dashboard.append(chartWeekly,chartMonthly);
 
-    // Daily study log input
-    const dateInput=el("input",{type:"date",id:"study-date",cls:"form-field"});
-    const hoursInput=el("input",{type:"number",id:"study-hours",cls:"form-field",placeholder:"Hours (max 24)",min:0,max:24});
-    const addBtn=el("button",{cls:"neon-btn"},"Add/Update Study Hours");
-    dash.append(dateInput,hoursInput,addBtn);
+  frame.append(dashboard);
+  root.append(frame);
 
-    addBtn.onclick=async ()=>{
-        const date=dateInput.value;
-        const hours=Math.min(24, Math.max(0, parseInt(hoursInput.value)||0));
-        if(!date) return alert("Select a date");
-        await setDoc(doc(db,"studyLogs",currentUser.uid+"_"+date),{
-            userId: currentUser.uid,
-            date: date,
-            hours: hours,
-            createdAt:new Date().toISOString()
-        });
-        alert("Saved!");
-        renderDashboard(); // refresh charts later
-    };
+  btnLogout.onclick=async ()=>{ await signOut(auth); renderLanding(); }
+  btnProfile.onclick=()=>{ renderProfile(); }
 
-    // Charts placeholders
-    const weeklyChartContainer=el("canvas",{id:"weeklyChart"});
-    const monthlyChartContainer=el("canvas",{id:"monthlyChart"});
-    dash.append(weeklyChartContainer,monthlyChartContainer);
+  btnAdd.onclick=async ()=>{
+    const dateVal=inputDate.value;
+    let hoursVal=parseFloat(inputHours.value);
+    if(!dateVal || isNaN(hoursVal) || hoursVal<0) { alert("Enter valid date"); return; }
+    if(hoursVal>24) hoursVal=24;
+    const docRef=doc(db,"studyLogs",currentUser.uid+"_"+dateVal);
+    await setDoc(docRef,{userId:currentUser.uid,date:dateVal,hours:hoursVal,createdAt:new Date().toISOString()});
+    inputHours.value=""; inputDate.value="";
+    loadCharts();
+  };
 
-    // Load studyLogs and render charts
-    renderCharts();
-}
-
-async function renderCharts(){
+  async function loadCharts(){
     const q=query(collection(db,"studyLogs"),where("userId","==",currentUser.uid));
     const snapshot=await getDocs(q);
-    const logs=snapshot.docs.map(d=>d.data());
-    // Process weekly & monthly data
-    const weeklyLabels=[], weeklyData=[], monthlyLabels=[], monthlyData=[];
-    logs.forEach(log=>{
-        const dt=new Date(log.date);
-        weeklyLabels.push(log.date);
-        weeklyData.push(log.hours);
-        monthlyLabels.push(dt.getMonth()+1);
-        monthlyData.push(log.hours);
-    });
+    const logs=[];
+    snapshot.forEach(d=>logs.push(d.data()));
 
-    // Weekly chart
-    new Chart(document.getElementById("weeklyChart"),{
-        type:"line",
-        data:{
-            labels:weeklyLabels,
-            datasets:[{label:"Hours",data:weeklyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]
-        }
+    // Weekly chart (current week Mon-Sun)
+    const weekDates=[];
+    const today=new Date();
+    const currDay=today.getDay(); // 0 Sun - 6 Sat
+    const monday=new Date(today); monday.setDate(today.getDate() - (currDay||7)+1);
+    for(let i=0;i<7;i++){
+      const d=new Date(monday); d.setDate(monday.getDate()+i);
+      weekDates.push(d.toISOString().split('T')[0]);
+    }
+    const weekData=weekDates.map(d=>{
+      const log=logs.find(l=>l.date===d);
+      return log?log.hours:0;
     });
+    if(window.wChart) window.wChart.destroy();
+    window.wChart=new Chart(chartWeekly,{type:'line',data:{labels:weekDates,datasets:[{label:'Hours',data:weekData,borderColor:'cyan',backgroundColor:'rgba(0,240,239,0.2)'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
 
     // Monthly chart
-    new Chart(document.getElementById("monthlyChart"),{
-        type:"line",
-        data:{
-            labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-            datasets:[{label:"Hours",data:monthlyData,borderColor:"#00f0ef",backgroundColor:"#8b5cf6"}]
-        }
+    const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const monthData=new Array(12).fill(0);
+    logs.forEach(l=>{
+      const d=new Date(l.date);
+      if(d.getFullYear()===today.getFullYear()) monthData[d.getMonth()]+=l.hours;
     });
+    if(window.mChart) window.mChart.destroy();
+    window.mChart=new Chart(chartMonthly,{type:'line',data:{labels:monthLabels,datasets:[{label:'Hours',data:monthData,borderColor:'cyan',backgroundColor:'rgba(0,240,239,0.2)'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+  }
+
+  loadCharts();
 }
 
 // ---------------- PROFILE ----------------
-function renderProfile(){
-    if(!root) return;
-    root.innerHTML="";
-    const frame=el("div",{cls:"app-frame"});
-    const top=el("div",{cls:"topbar"},[
-        el("div",{cls:"brand"},"Profile"),
-        el("div",{cls:"flex gap-2"},[
-            el("button",{cls:"neon-btn",onclick:()=>renderDashboard()},"Back"),
-            el("button",{cls:"neon-btn",onclick:async()=>{await signOut(auth); renderLanding();}},"Logout")
-        ])
-    ]);
-    frame.appendChild(top);
+async function renderProfile(){
+  if(!currentUser) return;
+  root.innerHTML="";
+  const docSnap=await getDoc(doc(db,"users",currentUser.uid));
+  const userData=docSnap.exists()?docSnap.data():{};
+  const frame=el("div",{cls:"app-frame"});
+  const top=el("div",{cls:"topbar"});
+  const brand=el("div",{cls:"brand"},"Profile");
+  const btnBack=el("button",{cls:"neon-btn"},"Back");
+  top.append(brand,btnBack);
+  frame.append(top);
 
-    const prof=el("div",{cls:"dashboard"});
-    frame.appendChild(prof);
-    root.append(frame);
+  const container=el("div",{cls:"dashboard"});
+  container.append(
+    el("div",{cls:"form-field"},[el("label",{},["First Name"]), el("input",{name:"firstName",value:userData.firstName||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["Last Name"]), el("input",{name:"lastName",value:userData.lastName||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["Birthday"]), el("input",{type:"date",name:"birthday",value:userData.birthday||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["School"]), el("input",{name:"school",value:userData.school||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["Phone"]), el("input",{name:"phone",value:userData.phone||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["Exam Year"]), el("input",{name:"examYear",value:userData.examYear||""})]),
+    el("div",{cls:"form-field"},[el("label",{},["Email (readonly)"]), el("input",{name:"email",value:userData.email||"",readonly:true})]),
+    el("div",{cls:"form-field"},[el("label",{},["Password"]), el("input",{type:"password",name:"password",placeholder:"Leave empty if not changing"})])
+  );
+  const btnSave=el("button",{cls:"neon-btn"},"Save Changes");
+  container.append(btnSave);
+  frame.append(container);
+  root.append(frame);
 
-    // Load user data
-    const docRef=doc(db,"users",currentUser.uid);
-    getDoc(docRef).then(d=>{
-        if(!d.exists()) return;
-        const data=d.data();
-        const firstNameInput=el("input",{value:data.firstName,cls:"form-field"});
-        const lastNameInput=el("input",{value:data.lastName,cls:"form-field"});
-        const emailInput=el("input",{value:data.email,cls:"form-field",disabled:true});
-        const pwInput=el("input",{type:"password",cls:"form-field",placeholder:"New password"});
-        const saveBtn=el("button",{cls:"neon-btn"},"Save Changes");
-
-        prof.append(
-            el("label",{},["First Name"]), firstNameInput,
-            el("label",{},["Last Name"]), lastNameInput,
-            el("label",{},["Email"]), emailInput,
-            el("label",{},["Password"]), pwInput,
-            saveBtn
-        );
-
-        saveBtn.onclick=async ()=>{
-            await updateDoc(docRef,{firstName:firstNameInput.value,lastName:lastNameInput.value});
-            if(pwInput.value) await updatePassword(auth.currentUser,pwInput.value);
-            alert("Profile updated!");
-            renderDashboard();
-        }
-    });
+  btnBack.onclick=()=>renderDashboard();
+  btnSave.onclick=async ()=>{
+    const inputs=container.querySelectorAll("input");
+    const updated={};
+    inputs.forEach(inp=>{if(inp.name!=="email" && inp.value) updated[inp.name]=inp.value;});
+    try{
+      await updateDoc(doc(db,"users",currentUser.uid),updated);
+      if(updated.password) await updatePassword(currentUser,updated.password);
+      alert("Profile updated!"); renderDashboard();
+    }catch(err){ alert(err.message);}
+  };
 }
 
 // ---------------- ADMIN DASHBOARD ----------------
 async function renderAdminDashboard(){
-    if(!root) return;
-    root.innerHTML="";
-    const frame=el("div",{cls:"app-frame"});
-    const top=el("div",{cls:"topbar"},[
-        el("div",{cls:"brand"},"Admin Dashboard"),
-        el("div",{cls:"flex gap-2"},[
-            el("button",{cls:"neon-btn",onclick:async()=>{await signOut(auth); renderLanding();}},"Logout")
-        ])
-    ]);
-    frame.appendChild(top);
-    const dash=el("div",{cls:"dashboard"});
-    frame.appendChild(dash);
-    root.append(frame);
+  root.innerHTML="";
+  const frame=el("div",{cls:"app-frame"});
+  const top=el("div",{cls:"topbar"});
+  const brand=el("div",{cls:"brand"},"Admin Dashboard");
+  const btnLogout=el("button",{cls:"neon-btn"},"Logout");
+  top.append(brand,btnLogout);
+  frame.append(top);
 
-    // Load all users
-    const usersSnap=await getDocs(collection(db,"users"));
-    usersSnap.forEach(u=>{
-        const udata=u.data();
-        const item=el("div",{cls:"user-item"},[
-            el("span",{},`${udata.firstName} ${udata.lastName} (${udata.email})`),
-            el("button",{cls:"neon-btn",onclick:()=>{deleteUser(u.id)}},"Delete"),
-        ]);
-        dash.append(item);
+  const container=el("div",{cls:"dashboard"});
+  const usersList=el("div",{cls:"user-list card"});
+  container.append(usersList);
+  frame.append(container);
+  root.append(frame);
+
+  btnLogout.onclick=async ()=>{ await signOut(auth); renderLanding(); }
+
+  async function loadUsers(){
+    usersList.innerHTML="";
+    const q=collection(db,"users");
+    const snap=await getDocs(q);
+    snap.forEach(docSnap=>{
+      const data=docSnap.data();
+      const uid=docSnap.id;
+      const userItem=el("div",{cls:"user-item"},[
+        el("div",{},`${data.firstName} ${data.lastName} (${data.email})`),
+        el("div",{},[
+          el("button",{cls:"neon-btn"},"View",onclick:()=>renderUserView(uid)),
+          el("button",{cls:"neon-btn"},"Delete",onclick:async ()=>{
+            if(confirm("Delete user?")){
+              await deleteDoc(doc(db,"users",uid));
+              alert("Deleted"); loadUsers();
+            }
+          })
+        ])
+      ]);
+      usersList.append(userItem);
     });
+  }
+
+  loadUsers();
 }
 
-async function deleteUser(uid){
-    if(!confirm("Delete this user?")) return;
-    await deleteDoc(doc(db,"users",uid));
-    const logsSnap=await getDocs(query(collection(db,"studyLogs"),where("userId","==",uid)));
-    for(const log of logsSnap.docs) await deleteDoc(doc(db,"studyLogs",log.id));
-    alert("Deleted!");
-    renderAdminDashboard();
+async function renderUserView(uid){
+  root.innerHTML="";
+  const docSnap=await getDoc(doc(db,"users",uid));
+  const userData=docSnap.data();
+  const frame=el("div",{cls:"app-frame"});
+  const top=el("div",{cls:"topbar"});
+  const brand=el("div",{cls:"brand"},`${userData.firstName} ${userData.lastName}`);
+  const btnBack=el("button",{cls:"neon-btn"},"Back");
+  top.append(brand,btnBack);
+  frame.append(top);
+
+  const dashboard=el("div",{cls:"dashboard"});
+  const chartWeekly=el("canvas",{id:"weeklyChart",cls:"mt-4"});
+  const chartMonthly=el("canvas",{id:"monthlyChart",cls:"mt-4"});
+  dashboard.append(chartWeekly,chartMonthly);
+  frame.append(dashboard);
+  root.append(frame);
+
+  btnBack.onclick=()=>renderAdminDashboard();
+
+  async function loadCharts(){
+    const q=query(collection(db,"studyLogs"),where("userId","==",uid));
+    const snapshot=await getDocs(q);
+    const logs=[];
+    snapshot.forEach(d=>logs.push(d.data()));
+
+    // Weekly chart
+    const weekDates=[];
+    const today=new Date();
+    const currDay=today.getDay();
+    const monday=new Date(today); monday.setDate(today.getDate() - (currDay||7)+1);
+    for(let i=0;i<7;i++){
+      const d=new Date(monday); d.setDate(monday.getDate()+i);
+      weekDates.push(d.toISOString().split('T')[0]);
+    }
+    const weekData=weekDates.map(d=>{
+      const log=logs.find(l=>l.date===d);
+      return log?log.hours:0;
+    });
+    if(window.wChart) window.wChart.destroy();
+    window.wChart=new Chart(chartWeekly,{type:'line',data:{labels:weekDates,datasets:[{label:'Hours',data:weekData,borderColor:'cyan',backgroundColor:'rgba(0,240,239,0.2)'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+
+    // Monthly chart
+    const monthLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const monthData=new Array(12).fill(0);
+    logs.forEach(l=>{
+      const d=new Date(l.date);
+      if(d.getFullYear()===today.getFullYear()) monthData[d.getMonth()]+=l.hours;
+    });
+    if(window.mChart) window.mChart.destroy();
+    window.mChart=new Chart(chartMonthly,{type:'line',data:{labels:monthLabels,datasets:[{label:'Hours',data:monthData,borderColor:'cyan',backgroundColor:'rgba(0,240,239,0.2)'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+  }
+
+  loadCharts();
 }
