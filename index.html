@@ -3,110 +3,115 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login & Sign-up</title>
+  <title>Option A — Neon SignUp / Login + Dashboard</title>
+
+  <!-- Google Font similar to screenshot heading -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for dashboard chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- custom styles -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="page-wrap">
-    <h1 class="page-title">Login & sign-up page</h1>
+  <!-- App root -->
+  <div id="root">
 
-    <div class="card">
-      <!-- glowing frame -->
-      <div class="card-frame"></div>
-
-      <!-- content -->
-      <div class="card-inner">
-        <!-- LEFT: welcome / promo area -->
-        <div class="left-panel">
-          <div class="left-overlay"></div>
-          <div class="welcome">
-            <h2>WELCOME BACK</h2>
-            <p>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ut provident
-              dolorem, error
-            </p>
-          </div>
-        </div>
-
-        <!-- RIGHT: forms -->
-        <div class="right-panel">
-          <div class="form-wrap">
-            <div class="form-header">
-              <h3 id="mode-title">sign Up</h3>
-            </div>
-
-            <!-- Signup form -->
-            <form id="signup-form" class="the-form">
-              <label class="field">
-                <span class="label-text">username</span>
-                <div class="input-row">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 12a5 5 0 1 0-.001-10.001A5 5 0 0 0 12 12zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5c0-3-4-5.5-9-5.5z"/></svg>
-                  <input name="username" type="text" placeholder="your name" required />
-                </div>
-              </label>
-
-              <label class="field">
-                <span class="label-text">Email</span>
-                <div class="input-row">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/></svg>
-                  <input name="email" type="email" placeholder="email@example.com" required />
-                </div>
-              </label>
-
-              <label class="field">
-                <span class="label-text">password</span>
-                <div class="input-row">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 17a2 2 0 1 0 .001-3.999A2 2 0 0 0 12 17zm6-6h-1V8a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2zM9 8a3 3 0 0 1 6 0v3H9V8z"/></svg>
-                  <input name="password" type="password" placeholder="••••••••" required />
-                </div>
-              </label>
-
-              <button class="btn primary" id="submit-signup">Sign up</button>
-
-              <p class="switch-text">
-                Already have an account?
-                <a href="#" id="to-login">Login</a>
-              </p>
-            </form>
-
-            <!-- Login form (hidden initially) -->
-            <form id="login-form" class="the-form hidden">
-              <label class="field">
-                <span class="label-text">Email</span>
-                <div class="input-row">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/></svg>
-                  <input name="email" type="email" placeholder="email@example.com" required />
-                </div>
-              </label>
-
-              <label class="field">
-                <span class="label-text">password</span>
-                <div class="input-row">
-                  <svg class="icon" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 17a2 2 0 1 0 .001-3.999A2 2 0 0 0 12 17zm6-6h-1V8a5 5 0 0 0-10 0v3H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2zM9 8a3 3 0 0 1 6 0v3H9V8z"/></svg>
-                  <input name="password" type="password" placeholder="••••••••" required />
-                </div>
-              </label>
-
-              <div class="row-between">
-                <a href="#" id="forgot-pass" class="muted">Forgot?</a>
-              </div>
-
-              <button class="btn primary" id="submit-login">Login</button>
-
-              <p class="switch-text">
-                Don't have an account?
-                <a href="#" id="to-signup">Sign up</a>
-              </p>
-            </form>
-
-          </div>
+    <!-- Landing (login/signup) container -->
+    <section class="container" id="auth-screen">
+      <div class="panel-left">
+        <div class="panel-left-inner">
+          <h2 class="welcome-title">WELCOME BACK</h2>
+          <p class="lead">
+            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ut provident dolorem, error.
+          </p>
+          <p class="small-hint">Already have an account? Use the form on the right to login.</p>
         </div>
       </div>
-    </div>
 
-    <p class="credit">#ilmah</p>
+      <div class="panel-right">
+        <div class="card">
+          <div class="card-header">
+            <h3 id="card-mode">Sign Up</h3>
+            <div class="mode-switch">
+              <button id="btn-to-signup" class="mode-btn active">Sign Up</button>
+              <button id="btn-to-login" class="mode-btn">Login</button>
+            </div>
+          </div>
+
+          <form id="auth-form" class="form-body">
+            <!-- signup fields (some hidden for login mode) -->
+            <div class="field-row signup-only">
+              <input type="text" id="fullname" placeholder="Username" autocomplete="name" />
+            </div>
+
+            <div class="field-row">
+              <input type="email" id="email" placeholder="Email" autocomplete="email" required />
+            </div>
+
+            <div class="field-row">
+              <input type="password" id="password" placeholder="Password" autocomplete="new-password" required />
+            </div>
+
+            <div class="field-row actions">
+              <button type="submit" id="submit-btn" class="neon-btn">Sign up</button>
+            </div>
+
+            <div id="form-msg" class="form-msg" aria-live="polite"></div>
+          </form>
+
+        </div> <!-- end card -->
+      </div> <!-- end right panel -->
+    </section>
+
+    <!-- Dashboard (hidden until login) -->
+    <section id="dashboard-screen" class="dashboard-screen hidden">
+      <header class="dash-header">
+        <div class="dash-left">
+          <h1 class="dash-title">Dashboard</h1>
+          <p class="dash-sub">Welcome, <span id="dash-username">User</span></p>
+        </div>
+        <div class="dash-right">
+          <button id="btn-logout" class="btn-outline">Logout</button>
+        </div>
+      </header>
+
+      <main class="dash-main">
+        <div class="cards">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-hours">0</div>
+            <div class="stat-label">Total Hours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-days">0</div>
+            <div class="stat-label">Days Logged</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-average">0</div>
+            <div class="stat-label">Avg / Day</div>
+          </div>
+        </div>
+
+        <section class="chart-box">
+          <h3>Weekly Progress</h3>
+          <canvas id="chart-weekly"></canvas>
+        </section>
+
+        <section class="actions-box">
+          <h3>Quick Log (simulate study entry)</h3>
+          <form id="log-form" class="log-form">
+            <input type="date" id="log-date" required />
+            <input type="number" id="log-hours" min="0" max="24" step="0.5" placeholder="Hours" required />
+            <button type="submit" class="neon-small">Add</button>
+            <div id="log-msg" class="small-msg"></div>
+          </form>
+        </section>
+      </main>
+    </section>
+
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js" type="module"></script>
 </body>
 </html>
