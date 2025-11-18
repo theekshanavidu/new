@@ -1,43 +1,22 @@
 :root{
   --primary-cyan:#00f0ef;
   --primary-purple:#8b5cf6;
-  --card-bg:rgba(255,255,255,0.05);
-  --text-light:#f0f0f0;
-  --text-dark:#111;
-  --bg-light:#fdfdfd;
-  --bg-dark:#0a0d10;
+  --card-bg: rgba(255,255,255,0.05);
 }
 
 body{
-  font-family:'Inter',sans-serif;
-  transition: background-color 0.3s,color 0.3s;
-}
-
-body.light{
-  background-color:var(--bg-light);
-  color:var(--text-dark);
-}
-
-body.dark{
-  background-color:var(--bg-dark);
-  color:var(--text-light);
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0d10;
 }
 
 .app-frame{
   margin:auto;
   background: linear-gradient(180deg, rgba(8,10,12,0.95), rgba(3,6,9,0.98));
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.6);
   border:1px solid rgba(139,92,246,.2);
   overflow:auto;
-  transition: background 0.3s,color 0.3s;
-}
-
-body.light .app-frame{
-  background:var(--bg-light);
-  color:var(--text-dark);
-  border:1px solid #aaa;
 }
 
 .topbar{
@@ -52,11 +31,7 @@ body.light .app-frame{
 .brand{
   font-size:24px;
   font-weight:800;
-  color:var(--primary-cyan);
-}
-
-body.light .brand{
-  color:#444;
+  color: var(--primary-cyan);
 }
 
 .neon-btn{
@@ -68,11 +43,6 @@ body.light .brand{
   font-weight:700;
   cursor:pointer;
   transition:.2s;
-}
-
-body.light .neon-btn{
-  background:#888;
-  color:#fff;
 }
 
 .neon-btn:hover{
@@ -91,10 +61,6 @@ body.light .neon-btn{
   margin-bottom:3px;
 }
 
-body.light .form-field label{
-  color:#222;
-}
-
 .form-field input{
   width:100%;
   padding:10px;
@@ -105,18 +71,9 @@ body.light .form-field label{
   outline:none;
 }
 
-body.light .form-field input{
-  background:#eee;
-  color:#111;
-}
-
 .small-link a{
   color: var(--primary-cyan);
   text-decoration:underline;
-}
-
-body.light .small-link a{
-  color:#333;
 }
 
 .dashboard{
@@ -130,23 +87,12 @@ body.light .small-link a{
   border-radius:10px;
   background: var(--card-bg);
   border:1px solid rgba(255,255,255,.1);
-  transition: background 0.3s,border 0.3s,color 0.3s;
-}
-
-body.light .card{
-  background:#eee;
-  border:1px solid #ccc;
-  color:#111;
 }
 
 canvas{
   border-radius:8px;
   background: rgba(0,0,0,0.2);
   max-height:300px;
-}
-
-body.light canvas{
-  background:#ddd;
 }
 
 .user-list{
@@ -162,11 +108,6 @@ body.light canvas{
   background: rgba(255,255,255,.05);
   border-radius:8px;
   align-items:center;
-}
-
-body.light .user-item{
-  background:#ccc;
-  color:#111;
 }
 
 .user-item button{
