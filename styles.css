@@ -1,145 +1,22 @@
 :root{
-  --neon-cyan: #00f0ef;
-  --neon-purple: #8b5cf6;
-  --panel-bg: rgba(10,13,16,0.7);
+  --neon-cyan:#00f0ef;
+  --neon-purple:#8b5cf6;
 }
 
-*{box-sizing:border-box;}
-body{font-family:Inter,ui-sans-serif,system-ui;}
-
-.app-frame{
-  margin:auto;
-  background:linear-gradient(180deg,rgba(8,10,12,.6),rgba(3,6,9,.85));
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
-  border:1px solid rgba(139,92,246,.08);
-}
-
-.split-container{
-  width:100%;
-  max-width:1000px;
-  margin:auto;
-  position:relative;
-  overflow:hidden;
-  border-radius:10px;
-  background:linear-gradient(135deg,#071016,#071a21 60%);
-  padding:2px;
-  box-shadow:0 0 40px rgba(139,92,246,.1);
-}
-
-.panel{
-  position:relative;
-  display:flex;
-  border-radius:8px;
-  overflow:hidden;
-}
-
-.panel .left{
-  width:50%;
-  padding:36px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:10px;
-  background:linear-gradient(135deg,rgba(0,240,239,.07),rgba(139,92,246,.03));
-}
-
-.panel .left h2{
-  font-size:28px;
-  font-weight:700;
-  color:var(--neon-cyan);
-}
-
-.panel .left p{
-  max-width:300px;
-  color:rgba(255,255,255,.75);
-}
-
-.panel .right{
-  width:50%;
-  padding:36px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:12px;
-  background:linear-gradient(180deg,rgba(3,6,9,.6),rgba(3,6,9,.9));
-}
-
-.form-field label{
-  font-size:12px;
-  color:rgba(255,255,255,.6);
-}
-
-.form-field input{
-  width:100%;
-  padding:10px;
-  background:transparent;
-  border:none;
-  border-bottom:1px solid rgba(255,255,255,.2);
-  color:white;
-  outline:none;
-}
-
-.neon-btn{
-  background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));
-  padding:10px 18px;
-  border-radius:30px;
-  border:none;
-  color:#000;
-  font-weight:700;
-  cursor:pointer;
-  transition:.2s;
-}
-
-.neon-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 0 20px var(--neon-cyan);
-}
-
-.small-link{
-  font-size:13px;
-  color:rgba(255,255,255,.7);
-}
-
-.small-link a{
-  color:var(--neon-cyan);
-  text-decoration:underline;
-}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.brand{
-  font-size:20px;
-  font-weight:800;
-}
-
-.dashboard{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-.card{
-  padding:15px;
-  border-radius:10px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.05);
-}
-
-.profile-view{
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px;
-}
-
-@media(max-width:900px){
-  .panel{flex-direction:column}
-  .panel .left, .panel .right{width:100%; padding:20px;}
-  .split-container{height:auto;}
-}
+body{font-family:Inter,ui-sans-serif,system-ui;overflow-y:auto;}
+.app-frame{margin:auto;background:linear-gradient(180deg,rgba(8,10,12,.6),rgba(3,6,9,.85));border-radius:12px;padding:20px;box-shadow:0 8px 40px rgba(0,0,0,.6);border:1px solid rgba(139,92,246,.08);}
+.split-container{display:flex;flex-wrap:wrap;margin:auto;overflow:hidden;border-radius:12px;box-shadow:0 0 40px rgba(139,92,246,.1);}
+.panel{flex:1;min-width:300px;padding:20px;}
+.panel.left{background:linear-gradient(135deg,rgba(0,240,239,.1),rgba(139,92,246,.05));color:var(--neon-cyan);}
+.panel.left h2{font-size:28px;font-weight:700;}
+.panel.left p{color:rgba(255,255,255,.7);}
+.form-field{margin-bottom:12px;display:flex;flex-direction:column;}
+.form-field input{padding:10px;border-radius:5px;background:transparent;border:1px solid rgba(255,255,255,.3);color:white;outline:none;}
+.neon-btn{background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));padding:10px 18px;border-radius:30px;border:none;color:#000;font-weight:700;cursor:pointer;transition:.2s;margin-top:8px;}
+.neon-btn:hover{transform:translateY(-2px);box-shadow:0 0 20px var(--neon-cyan);}
+.small-link{font-size:13px;color:rgba(255,255,255,.7);}
+.small-link a{color:var(--neon-cyan);text-decoration:underline;}
+.dashboard{margin-top:20px;display:flex;flex-direction:column;gap:12px;}
+canvas{background:#111;border-radius:10px;padding:10px;}
+.light-mode{background:#f5f5f5;color:#111;}
+.light-mode input{color:#111;border-color:#ccc;background:#fff;}
