@@ -1,71 +1,258 @@
-// ---------- Home ----------
-async function renderHome(){
-  appContainer.innerHTML = `
-  <div class="space-y-4 w-full max-w-xl mx-auto">
-    <h2 class="text-2xl font-bold">Daily Entry</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="https://img.freepik.com/free-photo/billie-dollar-money-background_1150-744.jpg">
+<title>Senul Seettu Random Number</title>
 
-    <!-- Save Today's Entry -->
-    <form id="daily-form" class="space-y-2 flex flex-col gap-2">
-      <input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" class="input-field" required>
-      <input type="number" name="hours" placeholder="Hours studied" min="0" max="24" class="input-field" required>
-      <button class="liquid-btn w-full">Save / Add</button>
-      <div id="daily-msg" class="text-green-400"></div>
-    </form>
-
-    <!-- Update Today's Entry -->
-    <h3 class="text-xl font-bold mt-4">Update Entry</h3>
-    <form id="update-today-form" class="flex flex-col gap-2">
-      <input type="date" name="updateDate" class="input-field" value="${new Date().toISOString().slice(0,10)}" required>
-      <input type="number" name="updateHours" placeholder="New hours" min="0" max="24" class="input-field">
-      <button class="liquid-btn w-full">Update</button>
-      <div id="update-msg" class="text-green-400"></div>
-    </form>
-
-    <h2 class="text-2xl font-bold mt-4">Weekly Chart</h2>
-    <canvas id="weekly-chart" class="bg-slate-800 rounded p-2"></canvas>
-    <h2 class="text-2xl font-bold mt-4">Monthly Chart</h2>
-    <canvas id="monthly-chart" class="bg-slate-800 rounded p-2"></canvas>
-  </div>`;
-
-  // ---------- Add / Save Entry ----------
-  document.getElementById('daily-form').onsubmit = async e=>{
-    e.preventDefault();
-    const f = e.target;
-    const today = f.date.value;
-    if(Number(f.hours.value) > 24){ alert("Maximum hours per day is 24"); return; }
-
-    const logsSnap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',currentUser.uid), where('date','==',today)));
-    if(logsSnap.docs.length){
-      const docId = logsSnap.docs[0].id;
-      await updateDoc(doc(db,'studyLogs',docId), {hours: Number(f.hours.value)});
-      document.getElementById('daily-msg').textContent = 'Updated!';
-    } else {
-      await addDoc(collection(db,'studyLogs'), {userId: currentUser.uid, date: today, hours: Number(f.hours.value), createdAt:new Date().toISOString()});
-      document.getElementById('daily-msg').textContent = 'Saved!';
-    }
-    renderCharts();
-  };
-
-  // ---------- Update Entry ----------
-  document.getElementById('update-today-form').onsubmit = async e=>{
-    e.preventDefault();
-    const f = e.target;
-    const today = f.updateDate.value; // <-- user-selected date
-    const newHours = Number(f.updateHours.value);
-    if(newHours > 24){ alert("Maximum hours per day is 24"); return; }
-
-    const logsSnap = await getDocs(query(collection(db,'studyLogs'), where('userId','==',currentUser.uid), where('date','==',today)));
-    if(logsSnap.docs.length){
-      const docId = logsSnap.docs[0].id;
-      await updateDoc(doc(db,'studyLogs',docId), {hours: newHours});
-      document.getElementById('update-msg').textContent = `Entry for ${today} updated!`;
-      f.updateHours.value = '';
-    } else {
-      alert(`No entry for ${today}. Please add it first.`);
-    }
-    renderCharts();
-  };
-
-  // ---------- Render Charts ----------
-  renderCharts();
+<style>
+body{
+  font-family:Arial,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  margin:0;
+  padding:20px;
+  background:url('https://cdn.shopify.com/s/files/1/1279/9999/files/CasinoSupply-319669-roulette-table-players-image-a1.jpg?v=1724267235') no-repeat center center fixed;
+  background-size:cover;
+  position:relative;
 }
+body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,0.7);
+  z-index:0;
+}
+*{position:relative;z-index:1}
+
+h1{color:#333}
+
+.card-container{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:700px;
+  margin-top:20px;
+}
+.card{
+  width:100px;
+  height:140px;
+  background:#fff;
+  border-radius:10px;
+  margin:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  cursor:pointer;
+  box-shadow:0 4px 8px rgba(0,0,0,.2);
+  transition:transform .5s,background .5s;
+}
+.card.flipped{
+  background:#4CAF50;
+  color:#fff;
+}
+
+input{
+  padding:10px;
+  border:none;
+  border-radius:5px;
+  margin:5px;
+  width:200px;
+}
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:5px;
+  margin:5px;
+  background:linear-gradient(90deg,#4CAF50 50%,#2e7d32 50%);
+  background-size:200% 100%;
+  color:#fff;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.4s;
+}
+button:hover{background-position:right}
+
+.admin-panel{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  background:#f9f9f9;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 4px 8px rgba(0,0,0,.2);
+  margin-top:20px;
+}
+
+#footer{margin-top:30px;color:gray}
+</style>
+</head>
+
+<body>
+<h1>🎰 Senul Seettu Random Number 🎯</h1>
+
+<div id="name-section">
+  <input id="username" placeholder="Enter Your Full Name">
+  <button id="startBtn">Start</button>
+</div>
+
+<div id="cards" class="card-container" style="display:none"></div>
+
+<div id="login-section">
+  <input type="password" id="adminPass" placeholder="Admin Password">
+  <button id="loginBtn">Admin Login</button>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+  <h2>Admin Panel</h2>
+
+  <input type="number" id="totalPlayers" min="2" value="10">
+  <button id="setPlayersBtn">Set Players</button>
+
+  <h3>Assign Number Manually</h3>
+  <input id="manualName" placeholder="Player Name">
+  <input type="number" id="manualNumber" placeholder="Number">
+  <button id="assignBtn">Assign</button>
+
+  <h3>Assigned Numbers</h3>
+  <div id="results"></div>
+
+  <button id="resetBtn">Reset All</button>
+  <button id="exportBtn">Export PNG</button>
+</div>
+
+<div id="footer">© Theekshana Viduranga</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Sounds -->
+<audio id="cardClickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3"></audio>
+<audio id="numberRevealSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-notification-2018.mp3"></audio>
+
+<script>
+const firebaseConfig={
+ apiKey:"AIzaSyACPs6N80C3i8SS3aG7ahybThWvsPSf19o",
+ authDomain:"senul-80301.firebaseapp.com",
+ databaseURL:"https://senul-80301-default-rtdb.asia-southeast1.firebasedatabase.app",
+ projectId:"senul-80301",
+ storageBucket:"senul-80301.appspot.com",
+ messagingSenderId:"718343352275",
+ appId:"1:718343352275:web:7c0e22dd69981690df8926"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let totalPlayers=10;
+let assigned=[];
+
+const cards=document.getElementById("cards");
+const results=document.getElementById("results");
+const clickSound=document.getElementById("cardClickSound");
+const winSound=document.getElementById("numberRevealSound");
+
+function availableNumbers(){
+  const nums=[];
+  for(let i=2;i<=totalPlayers;i++){
+    if(!assigned.some(a=>a.number===i)) nums.push(i);
+  }
+  return nums;
+}
+
+db.ref("totalPlayers").on("value",s=>{
+ if(s.val()){totalPlayers=s.val();document.getElementById("totalPlayers").value=totalPlayers;}
+});
+
+db.ref("assigned").on("value",s=>{
+ assigned=s.val()||[];
+ renderResults();
+});
+
+function renderResults(){
+ results.innerHTML=assigned.map(a=>`${a.name} → ${a.number}`).join("<br>");
+}
+
+document.getElementById("startBtn").onclick=()=>{
+ const name=username.value.trim();
+ if(!name) return alert("Enter name");
+
+ if(assigned.some(a=>a.name===name))
+   return alert("You already have a number");
+
+ cards.innerHTML="";
+ cards.style.display="flex";
+
+ for(let i=0;i<totalPlayers-1;i++){
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerText="❓";
+
+  c.onclick=()=>{
+    if(c.classList.contains("flipped"))return;
+
+    const nums=availableNumbers();
+    if(nums.length===0)return alert("No numbers left");
+
+    clickSound.currentTime=0;clickSound.play();
+
+    const n=nums[Math.floor(Math.random()*nums.length)];
+    assigned.push({name:name,number:n});
+    db.ref("assigned").set(assigned);
+
+    c.classList.add("flipped");
+    c.innerText=n;
+
+    winSound.currentTime=0;winSound.play();
+  };
+  cards.appendChild(c);
+ }
+};
+
+loginBtn.onclick=()=>{
+ if(adminPass.value==="pacaya123"){
+  login-section.style.display="none";
+  adminPanel.style.display="flex";
+ }else alert("Wrong password");
+};
+
+setPlayersBtn.onclick=()=>{
+ totalPlayers=parseInt(totalPlayers.value);
+ db.ref("totalPlayers").set(totalPlayers);
+};
+
+assignBtn.onclick=()=>{
+ const name=manualName.value.trim();
+ const num=parseInt(manualNumber.value);
+
+ if(!name||!num)return alert("Required");
+ if(assigned.some(a=>a.number===num))return alert("Number already used");
+
+ assigned=assigned.filter(a=>a.name!==name);
+ assigned.push({name,number:num});
+ db.ref("assigned").set(assigned);
+};
+
+resetBtn.onclick=()=>{
+ if(confirm("Reset all?")){
+  db.ref().set({totalPlayers:10,assigned:[]});
+  location.reload();
+ }
+};
+
+exportBtn.onclick=()=>{
+ html2canvas(results).then(c=>{
+  const a=document.createElement("a");
+  a.download="assigned.png";
+  a.href=c.toDataURL();
+  a.click();
+ });
+};
+</script>
+</body>
+</html>
