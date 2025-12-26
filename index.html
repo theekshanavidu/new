@@ -7,37 +7,37 @@
 <title>Senul Seettu Random Number</title>
 
 <style>
-body{
-  font-family:Arial,sans-serif;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-  margin:0;
-  padding:20px;
-  background:url('https://cdn.shopify.com/s/files/1/1279/9999/files/CasinoSupply-319669-roulette-table-players-image-a1.jpg?v=1724267235') no-repeat center center fixed;
-  background-size:cover;
-  position:relative;
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  background: url('https://cdn.shopify.com/s/files/1/1279/9999/files/CasinoSupply-319669-roulette-table-players-image-a1.jpg?v=1724267235') no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
 }
-body::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(255,255,255,0.7);
-  z-index:0;
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.7);
+  z-index: 0;
 }
-*{position:relative;z-index:1}
+* { position: relative; z-index: 1; }
+h1 { color:#333; }
 
-h1{color:#333}
-
-.card-container{
+.card-container {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
   max-width:700px;
   margin-top:20px;
 }
-.card{
+
+.card {
   width:100px;
   height:140px;
   background:#fff;
@@ -48,59 +48,65 @@ h1{color:#333}
   justify-content:center;
   font-size:30px;
   cursor:pointer;
-  box-shadow:0 4px 8px rgba(0,0,0,.2);
-  transition:transform .5s,background .5s;
+  transition: transform 0.5s, background 0.5s;
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
 }
-.card.flipped{
+
+.flipped {
   background:#4CAF50;
-  color:#fff;
+  color:white;
 }
 
-input{
-  padding:10px;
-  border:none;
-  border-radius:5px;
-  margin:5px;
-  width:200px;
-}
-button{
-  padding:10px 20px;
-  border:none;
-  border-radius:5px;
-  margin:5px;
-  background:linear-gradient(90deg,#4CAF50 50%,#2e7d32 50%);
-  background-size:200% 100%;
-  color:#fff;
-  cursor:pointer;
-  font-weight:bold;
-  transition:.4s;
-}
-button:hover{background-position:right}
-
-.admin-panel{
+.admin-panel {
   display:none;
   flex-direction:column;
   align-items:center;
   background:#f9f9f9;
   padding:20px;
   border-radius:10px;
-  box-shadow:0 4px 8px rgba(0,0,0,.2);
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
   margin-top:20px;
 }
 
-#footer{margin-top:30px;color:gray}
+input {
+  padding:10px;
+  border:none;
+  border-radius:5px;
+  margin:5px;
+  width:200px;
+}
+
+button {
+  padding:10px 20px;
+  border:none;
+  border-radius:5px;
+  margin:5px;
+  background: linear-gradient(90deg,#4CAF50 50%, #2e7d32 50%);
+  background-size:200% 100%;
+  color:white;
+  cursor:pointer;
+  transition: all 0.4s ease;
+  font-weight:bold;
+}
+
+button:hover {
+  background-position: right center;
+}
+
+#footer { margin-top:30px; color:gray; }
 </style>
 </head>
 
 <body>
+
 <h1>🎰 Senul Seettu Random Number 🎯</h1>
 
 <div id="name-section">
-  <input id="username" placeholder="Enter Your Full Name">
+  <input type="text" id="username" placeholder="Enter Your Full Name">
   <button id="startBtn">Start</button>
 </div>
 
-<div id="cards" class="card-container" style="display:none"></div>
+<div class="card-container" id="cards" style="display:none;"></div>
 
 <div id="login-section">
   <input type="password" id="adminPass" placeholder="Admin Password">
@@ -108,21 +114,23 @@ button:hover{background-position:right}
 </div>
 
 <div class="admin-panel" id="adminPanel">
-  <h2>Admin Panel</h2>
+  <h2>🧑‍💼 Admin Panel</h2>
 
-  <input type="number" id="totalPlayers" min="2" value="10">
+  <label>Total Players:
+    <input type="number" id="totalPlayers" min="2" value="10">
+  </label>
   <button id="setPlayersBtn">Set Players</button>
 
   <h3>Assign Number Manually</h3>
-  <input id="manualName" placeholder="Player Name">
+  <input type="text" id="manualName" placeholder="Player Name">
   <input type="number" id="manualNumber" placeholder="Number">
   <button id="assignBtn">Assign</button>
 
   <h3>Assigned Numbers</h3>
   <div id="results"></div>
 
-  <button id="resetBtn">Reset All</button>
-  <button id="exportBtn">Export PNG</button>
+  <button id="resetBtn">🔄 Reset All</button>
+  <button id="exportBtn">📥 Export as PNG</button>
 </div>
 
 <div id="footer">© Theekshana Viduranga</div>
@@ -132,127 +140,144 @@ button:hover{background-position:right}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- Sounds -->
 <audio id="cardClickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3"></audio>
 <audio id="numberRevealSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-notification-2018.mp3"></audio>
 
 <script>
-const firebaseConfig={
- apiKey:"AIzaSyACPs6N80C3i8SS3aG7ahybThWvsPSf19o",
- authDomain:"senul-80301.firebaseapp.com",
- databaseURL:"https://senul-80301-default-rtdb.asia-southeast1.firebasedatabase.app",
- projectId:"senul-80301",
- storageBucket:"senul-80301.appspot.com",
- messagingSenderId:"718343352275",
- appId:"1:718343352275:web:7c0e22dd69981690df8926"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+// Firebase config
+firebase.initializeApp({
+  apiKey: "AIzaSyACPs6N80C3i8SS3aG7ahybThWvsPSf19o",
+  authDomain: "senul-80301.firebaseapp.com",
+  databaseURL: "https://senul-80301-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "senul-80301",
+  storageBucket: "senul-80301.appspot.com",
+  messagingSenderId: "718343352275",
+  appId: "1:718343352275:web:7c0e22dd69981690df8926"
+});
 
-let totalPlayers=10;
-let assigned=[];
+const db = firebase.database();
 
-const cards=document.getElementById("cards");
-const results=document.getElementById("results");
-const clickSound=document.getElementById("cardClickSound");
-const winSound=document.getElementById("numberRevealSound");
+let totalPlayers = 10;
+let assigned = [];
+let availableNumbers = [];
 
-function availableNumbers(){
-  const nums=[];
+const cardsContainer = document.getElementById("cards");
+const results = document.getElementById("results");
+
+db.ref("totalPlayers").on("value", s => {
+  if (s.val()) totalPlayers = s.val();
+});
+
+db.ref("assigned").on("value", s => {
+  assigned = s.val() || [];
+  updateAvailableNumbers();
+  displayResults();
+});
+
+function updateAvailableNumbers(){
+  availableNumbers = [];
   for(let i=2;i<=totalPlayers;i++){
-    if(!assigned.some(a=>a.number===i)) nums.push(i);
+    if(!assigned.find(a => a.number === i)){
+      availableNumbers.push(i);
+    }
   }
-  return nums;
 }
 
-db.ref("totalPlayers").on("value",s=>{
- if(s.val()){totalPlayers=s.val();document.getElementById("totalPlayers").value=totalPlayers;}
-});
-
-db.ref("assigned").on("value",s=>{
- assigned=s.val()||[];
- renderResults();
-});
-
-function renderResults(){
- results.innerHTML=assigned.map(a=>`${a.name} → ${a.number}`).join("<br>");
+function displayResults(){
+  results.innerHTML = assigned.length
+    ? assigned.map(a => `<p>${a.name} → ${a.number}</p>`).join("")
+    : "<p>No numbers assigned</p>";
 }
 
-document.getElementById("startBtn").onclick=()=>{
- const name=username.value.trim();
- if(!name) return alert("Enter name");
+function generateCards(username){
+  cardsContainer.innerHTML = "";
+  for(let i=0;i<totalPlayers-1;i++){
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerText = "❓";
 
- if(assigned.some(a=>a.name===name))
-   return alert("You already have a number");
+    card.onclick = () => {
 
- cards.innerHTML="";
- cards.style.display="flex";
+      if(assigned.find(a => a.name === username)){
+        return alert("You already received a number!");
+      }
 
- for(let i=0;i<totalPlayers-1;i++){
-  const c=document.createElement("div");
-  c.className="card";
-  c.innerText="❓";
+      if(availableNumbers.length === 0){
+        return alert("No numbers available!");
+      }
 
-  c.onclick=()=>{
-    if(c.classList.contains("flipped"))return;
+      document.getElementById("cardClickSound").play();
 
-    const nums=availableNumbers();
-    if(nums.length===0)return alert("No numbers left");
+      const num = availableNumbers[Math.floor(Math.random()*availableNumbers.length)];
+      assigned.push({ name: username, number: num, adminAssigned:false });
+      db.ref("assigned").set(assigned);
 
-    clickSound.currentTime=0;clickSound.play();
+      card.classList.add("flipped");
+      card.innerText = num;
+      document.getElementById("numberRevealSound").play();
 
-    const n=nums[Math.floor(Math.random()*nums.length)];
-    assigned.push({name:name,number:n});
-    db.ref("assigned").set(assigned);
+      alert(`${username} got number ${num}`);
+    };
 
-    c.classList.add("flipped");
-    c.innerText=n;
+    cardsContainer.appendChild(card);
+  }
+}
 
-    winSound.currentTime=0;winSound.play();
-  };
-  cards.appendChild(c);
- }
+document.getElementById("startBtn").onclick = () => {
+  const name = username.value.trim();
+  if(!name) return alert("Enter your name!");
+  document.getElementById("name-section").style.display="none";
+  cardsContainer.style.display="flex";
+  generateCards(name);
 };
 
-loginBtn.onclick=()=>{
- if(adminPass.value==="pacaya123"){
-  login-section.style.display="none";
-  adminPanel.style.display="flex";
- }else alert("Wrong password");
+document.getElementById("loginBtn").onclick = () => {
+  if(adminPass.value === "pacaya123"){
+    document.getElementById("login-section").style.display="none";
+    adminPanel.style.display="flex";
+  } else alert("Wrong password!");
 };
 
-setPlayersBtn.onclick=()=>{
- totalPlayers=parseInt(totalPlayers.value);
- db.ref("totalPlayers").set(totalPlayers);
+document.getElementById("setPlayersBtn").onclick = () => {
+  const v = parseInt(totalPlayers.value);
+  if(v < 2) return alert("Min 2 players!");
+  db.ref("totalPlayers").set(v);
 };
 
-assignBtn.onclick=()=>{
- const name=manualName.value.trim();
- const num=parseInt(manualNumber.value);
+document.getElementById("assignBtn").onclick = () => {
+  const name = manualName.value.trim();
+  const num = parseInt(manualNumber.value);
 
- if(!name||!num)return alert("Required");
- if(assigned.some(a=>a.number===num))return alert("Number already used");
+  if(!name || !num) return alert("Name & number required!");
+  if(num < 2 || num > totalPlayers) return alert("Invalid number!");
 
- assigned=assigned.filter(a=>a.name!==name);
- assigned.push({name,number:num});
- db.ref("assigned").set(assigned);
+  if(assigned.find(a => a.name === name))
+    return alert("This player already has a number!");
+
+  if(assigned.find(a => a.number === num))
+    return alert("This number already assigned!");
+
+  assigned.push({ name, number:num, adminAssigned:true });
+  db.ref("assigned").set(assigned);
 };
 
-resetBtn.onclick=()=>{
- if(confirm("Reset all?")){
-  db.ref().set({totalPlayers:10,assigned:[]});
-  location.reload();
- }
+document.getElementById("resetBtn").onclick = () => {
+  if(confirm("Reset all?")){
+    db.ref("assigned").set([]);
+    db.ref("totalPlayers").set(10);
+    location.reload();
+  }
 };
 
-exportBtn.onclick=()=>{
- html2canvas(results).then(c=>{
-  const a=document.createElement("a");
-  a.download="assigned.png";
-  a.href=c.toDataURL();
-  a.click();
- });
+document.getElementById("exportBtn").onclick = () => {
+  html2canvas(results).then(c => {
+    const a = document.createElement("a");
+    a.download = "assigned_numbers.png";
+    a.href = c.toDataURL();
+    a.click();
+  });
 };
 </script>
+
 </body>
 </html>
